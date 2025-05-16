@@ -25,14 +25,25 @@ public class TaskForm extends JDialog {
         // Przyciski
         JButton saveButton = new JButton("Zapisz");
         saveButton.addActionListener(e -> {
+            String name = nameField.getText().trim();
+
+            if (name.isEmpty()) {
+                nameField.setBorder(BorderFactory.createLineBorder(Color.RED));
+                return;
+            } else {
+                nameField.setBorder(UIManager.getLookAndFeel().getDefaults().getBorder("TextField.border"));
+            }
+
             Task task = new Task(
-                nameField.getText(),
+                name,
                 false,
-                ((Number)difficultySpinner.getValue()).byteValue()
+                ((Number) difficultySpinner.getValue()).byteValue()
             );
+
             onSuccess.accept(task);
             dispose();
         });
+
         
         panel.add(saveButton);
         add(panel);

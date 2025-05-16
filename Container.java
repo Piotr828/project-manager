@@ -8,9 +8,17 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
+import java.util.Date;
+import java.text.SimpleDateFormat;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import javax.swing.SwingUtilities;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+
 
 
 
@@ -27,16 +35,18 @@ class Task{
 
 class Project {
 	byte progress;
-	int start;
-	int deadline;
-	int predict;
+	long start;
+	long deadline;
+	long predict;
 	int delay;
 	List<Task> tasks;
 	String name;
 	String descript;
-	int color;
+	byte red;
+    byte green;
+    byte blue;
 
-	public Project(String name, String descript, int start, int deadline) {
+	public Project(String name, String descript, long start, long deadline) {
         this.name = name;
         this.descript = descript;
         this.start = start;
@@ -44,13 +54,26 @@ class Project {
         this.tasks = new ArrayList<>();
         this.progress = 0;
         this.predict = 0;
-        this.delay = predict - deadline;
-        this.color = 16777215; //aqua
+        this.delay = (int) (predict-deadline)/86400;
+        this.red = -128; 
+        this.green = 127;
+        this.blue = 127;
+
+
     }
 
-	public void addTask(Task task) {
+    public String startDate() {
+        LocalDate date = LocalDate.ofEpochDay(start); 
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        return date.format(formatter);
+}
+    public String deadlineDate(){
+        LocalDate date = LocalDate.ofEpochDay(deadline);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        return date.format(formatter);
+}
+    public void addTask(Task task) {
         tasks.add(task);
-        System.out.println("Dodano zadanie: " + task.name + ", Liczba zadań: " + tasks.size());
     }
     public void removeTask(Task task) {
     	tasks.remove(task);
@@ -70,10 +93,10 @@ private void calculatePredict() {
 
         if (taskTrue > 0) {
             this.predict = currentDay + (currentDay - start) * tasks.size() / taskTrue;
-            this.delay = this.predict - deadline;
+            this.delay = (int) (this.predict - deadline);
         } else {
             this.predict = currentDay;
-            this.delay = this.predict - deadline;
+            this.delay = (int) (this.predict - deadline);
         }
     }
 public int progress() {
@@ -103,40 +126,51 @@ class Container{
     public void removeProject(Project project) {
     	projects.remove(project);
     }
-    public void sortProjects() {
+
+public void sortProjects() {
     Comparator<Project> comparator = null;
     boolean reverse = sortby < 0;
     int key = Math.abs(sortby);
 
-	switch (key) {
-            case 0:
-                comparator = Comparator.comparing(p -> p.name.toLowerCase());
-                break;
-            case 1:
-                comparator = Comparator.comparingInt(p -> p.start);
-                break;
-            case 2:
-                comparator = Comparator.comparingInt(p -> p.deadline);
-                break;
-            case 3:
-                comparator = Comparator.comparingInt(p -> 
-                    p.tasks.stream().mapToInt(t -> t.diffic).sum());
-                break;
-            case 4:
-                comparator = Comparator.comparingInt(p -> p.progress);
-                break;
-            case 5:
-                comparator = Comparator.comparingInt(p -> p.predict);
-                break;
-            case 6:
-                comparator = Comparator.comparingInt(p -> p.delay);
-                break;
-            case 7:
-                comparator = Comparator.comparingInt(p -> p.color);
-                break;
-            default:
-                return;
-        }
+    switch (key) {
+        case 0:
+            comparator = Comparator.comparing(p -> p.name.toLowerCase());
+            break;
+        case 1:
+            comparator = Comparator.comparingLong(p -> p.start);
+            break;
+        case 2:
+            comparator = Comparator.comparingLong(p -> p.deadline);
+            break;
+        case 3:
+            comparator = Comparator.comparingInt(p -> 
+                p.tasks.stream().mapToInt(t -> t.diffic).sum());
+            break;
+        case 4:
+            comparator = Comparator.comparingInt(p -> p.progress);
+            break;
+        case 5:
+            comparator = Comparator.comparingLong(p -> p.predict);
+            break;
+        case 6:
+            comparator = Comparator.comparingInt(p -> p.delay);
+            break;
+        case 7:
+            comparator = Comparator
+                .comparingInt((Project p) -> p.red)
+                .thenComparingInt(p -> p.green)
+                .thenComparingInt(p -> p.blue);
+            break;
+        default:
+            return;
+    }
+
+    if (reverse && comparator != null) {
+        comparator = comparator.reversed();
+    }
+
+    projects.sort(comparator);
+
 
 	if (comparator != null) {
 		if (reverse) {
@@ -160,7 +194,7 @@ boolean darkmode;
 public User(String filename) throws IOException, ClassNotFoundException {
         File file = new File(filename);
         if (!file.exists()) {
-            throw new FileNotFoundException("1");
+            throw new FileNotFoundException("Error");
         }
 
 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
