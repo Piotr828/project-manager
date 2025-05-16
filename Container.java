@@ -50,6 +50,7 @@ class Project {
 
 	public void addTask(Task task) {
         tasks.add(task);
+        System.out.println("Dodano zadanie: " + task.name + ", Liczba zadań: " + tasks.size());
     }
     public void removeTask(Task task) {
     	tasks.remove(task);

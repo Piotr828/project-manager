@@ -1,3 +1,10 @@
 *.class
 *.rar
 *.txt
+*.iml
+.idea/
+out/
+*.ser
+*.log
+*.json
+*.csv
