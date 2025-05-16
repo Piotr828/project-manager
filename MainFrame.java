@@ -5,7 +5,7 @@ public class MainFrame extends JFrame {
     private CardLayout cardLayout;
     private JPanel mainPanel;
     
-    public MainFrame() {
+    public MainFrame(Container container) {
         setTitle("Project Manager");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 700);
@@ -14,7 +14,6 @@ public class MainFrame extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
         
-        Container container = new Container();
         DashboardView dashboard = new DashboardView(container, this);
         mainPanel.add(dashboard, "dashboard");
         

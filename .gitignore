@@ -8,3 +8,4 @@ out/
 *.log
 *.json
 *.csv
+*.sh
