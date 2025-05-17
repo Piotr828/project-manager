@@ -9,12 +9,15 @@ public class Main {
         SwingUtilities.invokeLater(() -> {
             // Inicjalizacja z przykładowymi danymi
             Container container = initSampleData();
-            
-            // Uruchomienie głównego okna
-            new MainFrame(container);
+            ImageIcon icon = new ImageIcon("Icon.png");
+
+            // Poprawka: deklarujemy zmienną frame
+            MainFrame frame = new MainFrame(container);
+            frame.setIconImage(icon.getImage());
         });
     }
-    
+
+
     private static Container initSampleData() {
         Container container = new Container();
         int startDay = (int) (System.currentTimeMillis() / (1000L * 3600*24));
