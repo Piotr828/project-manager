@@ -39,6 +39,7 @@ public class DashboardView extends JPanel {
         container.sortProjects();
         
         for (Project project : container.projects) {
+            project.calculatePredict(); //odświeżam szacowany czas ukończenia. DO EDYCJI
             ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
             projectsPanel.add(card);
             projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));

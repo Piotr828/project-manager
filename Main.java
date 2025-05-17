@@ -24,7 +24,7 @@ public class Main {
         p1.addTask(new Task("Implementacja frontendu", false, (byte) 8));
         container.addProject(p1);
 
-        Project p2 = new Project("Aplikacja mobilna", "Nowa aplikacja dla klientów" + p1.startDate(), startDay, startDay + 45);
+        Project p2 = new Project("Aplikacja mobilna", "Nowa aplikacja dla klientów" + p1.predictDate(), startDay, startDay + 45);
         p2.addTask(new Task("Research rynku", true, (byte) 3));
         container.addProject(p2);
         

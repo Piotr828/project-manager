@@ -68,16 +68,12 @@ class Project {
     }
 
 
-    public String startDate() {
-        LocalDate date = LocalDate.ofEpochDay(start); 
+    public String predictDate() {
+        LocalDate date = LocalDate.ofEpochDay(predict); 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         return date.format(formatter);
 }
-    public String deadlineDate(){
-        LocalDate date = LocalDate.ofEpochDay(deadline);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        return date.format(formatter);
-}
+
     public void addTask(Task task) {
         tasks.add(task);
     }
@@ -85,7 +81,7 @@ class Project {
     	tasks.remove(task);
     }
 
-private void calculatePredict() {
+public void calculatePredict() {
         long currentTimeMillis = System.currentTimeMillis();
         int currentDay = (int) (currentTimeMillis / (1000 * 60 * 60 * 24));
         int totalDifficulty = 0;
