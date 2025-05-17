@@ -42,25 +42,31 @@ class Project {
 	List<Task> tasks;
 	String name;
 	String descript;
-	byte red;
-    byte green;
-    byte blue;
+	int red;
+    int green;
+    int blue;
 
-	public Project(String name, String descript, long start, long deadline) {
+	public Project(String name, String description, long start, long deadline, int red, int green, int blue)
+ {
         this.name = name;
-        this.descript = descript;
+        this.descript = description;
         this.start = start;
         this.deadline = deadline;
         this.tasks = new ArrayList<>();
         this.progress = 0;
         this.predict = 0;
         this.delay = (int) (predict-deadline)/86400;
-        this.red = -128; 
-        this.green = 127;
-        this.blue = 127;
+        this.red = red; 
+        this.green = green;
+        this.blue = blue;
 
 
     }
+
+    public Project(String name, String description, long start, long deadline) {
+        this(name, description, start, deadline, 0, 0, 0); 
+    }
+
 
     public String startDate() {
         LocalDate date = LocalDate.ofEpochDay(start); 
