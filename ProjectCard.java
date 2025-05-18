@@ -1,20 +1,23 @@
 import java.awt.*;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicProgressBarUI;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 
 public class ProjectCard extends JPanel {
 
     public ProjectCard(Project project, Runnable onClick) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        setAlignmentX(Component.LEFT_ALIGNMENT);
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-        // === Kolorowy pasek po lewej ===
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createMatteBorder(0, 6, 0, 0, new Color(project.red, project.green, project.blue)),
             BorderFactory.createCompoundBorder(
@@ -23,12 +26,10 @@ public class ProjectCard extends JPanel {
             )
         ));
 
-        // === Tytuł ===
         JLabel nameLabel = new JLabel(project.name);
         nameLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // === Opis ===
         JTextArea descArea = new JTextArea(project.descript);
         descArea.setFont(new Font("SansSerif", Font.PLAIN, 13));
         descArea.setLineWrap(true);
@@ -36,9 +37,7 @@ public class ProjectCard extends JPanel {
         descArea.setEditable(false);
         descArea.setOpaque(false);
         descArea.setAlignmentX(Component.LEFT_ALIGNMENT);
-        descArea.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
-        // === Nagłówki kolumn (bez "Postęp") ===
         JPanel headerPanel = new JPanel(new GridLayout(1, 3, 20, 0));
         headerPanel.setOpaque(false);
         headerPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -47,7 +46,6 @@ public class ProjectCard extends JPanel {
         headerPanel.add(createHeaderLabel("Przewidywanie"));
         headerPanel.add(createHeaderLabel("Termin"));
 
-        // === Wartości kolumn (bez "Postęp") ===
         JPanel valuePanel = new JPanel(new GridLayout(1, 3, 20, 0));
         valuePanel.setOpaque(false);
         valuePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -65,20 +63,17 @@ public class ProjectCard extends JPanel {
         deadlineLabel.setHorizontalAlignment(SwingConstants.CENTER);
         valuePanel.add(deadlineLabel);
 
-        // === Pasek postępu ===
         JProgressBar progressBar = new JProgressBar(0, 100);
         progressBar.setValue(project.progress());
         progressBar.setStringPainted(true);
         progressBar.setFont(new Font("SansSerif", Font.BOLD, 12));
         progressBar.setForeground(new Color(project.red, project.green, project.blue));
         progressBar.setAlignmentX(Component.LEFT_ALIGNMENT);
-        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 20));
         progressBar.setUI(new BasicProgressBarUI() {
             protected Color getSelectionBackground() { return Color.BLACK; }
             protected Color getSelectionForeground() { return Color.WHITE; }
         });
 
-        // === Dodaj komponenty ===
         add(nameLabel);
         add(Box.createVerticalStrut(5));
         add(descArea);
@@ -87,20 +82,47 @@ public class ProjectCard extends JPanel {
         add(Box.createVerticalStrut(5));
         add(valuePanel);
         add(Box.createVerticalStrut(10));
-        add(progressBar);  // Na samym dole
+        add(progressBar);
 
-        // === Obsługa kliknięcia – klikane wszystko ===
+        this.addAncestorListener(new AncestorListener() {
+            @Override
+            public void ancestorAdded(AncestorEvent event) {
+                updateWidth();
+                Component parent = getParent();
+                if (parent != null) {
+                    parent.addComponentListener(new ComponentAdapter() {
+                        @Override
+                        public void componentResized(ComponentEvent e) {
+                            updateWidth();
+                        }
+                    });
+                }
+            }
+
+            @Override public void ancestorRemoved(AncestorEvent event) {}
+            @Override public void ancestorMoved(AncestorEvent event) {}
+        });
+
         MouseAdapter clickHandler = new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 onClick.run();
             }
         };
-
         for (Component c : getComponents()) {
             c.addMouseListener(clickHandler);
         }
         this.addMouseListener(clickHandler);
+    }
+
+    private void updateWidth() {
+        if (getParent() != null) {
+            int width = getParent().getWidth();
+            setPreferredSize(new Dimension(width, getPreferredSize().height));
+            setMaximumSize(new Dimension(width, Integer.MAX_VALUE));
+            revalidate();
+            repaint();
+        }
     }
 
     private JLabel createHeaderLabel(String text) {

@@ -2,6 +2,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 
 public class DashboardView extends JPanel {
     private final MainFrame frame;
@@ -28,25 +30,45 @@ public class DashboardView extends JPanel {
         // Panel projektów
         projectsPanel = new JPanel();
         projectsPanel.setLayout(new BoxLayout(projectsPanel, BoxLayout.Y_AXIS));
-        refreshProjects();
 
         JScrollPane scrollPane = new JScrollPane(projectsPanel);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
+
+        // Listener do zmiany rozmiaru i odświeżania kart
+        scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                SwingUtilities.invokeLater(() -> resizeProjectCards());
+            }
+        });
+
+        refreshProjects();
     }
 
     private void refreshProjects() {
         projectsPanel.removeAll();
         container.sortProjects();
-        
+
         for (Project project : container.projects) {
-            project.calculatePredict(); //odświeżam szacowany czas ukończenia. DO EDYCJI
+            project.calculatePredict();
             ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
+            card.setAlignmentX(Component.LEFT_ALIGNMENT);
             projectsPanel.add(card);
             projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         }
-        
+
         revalidate();
         repaint();
+    }
+
+    private void resizeProjectCards() {
+        int width = projectsPanel.getWidth();
+        for (Component comp : projectsPanel.getComponents()) {
+            if (comp instanceof ProjectCard) {
+                ((ProjectCard) comp).setMaximumSize(new Dimension(width, 220));
+            }
+        }
     }
 
     private void showAddProjectForm(ActionEvent e) {
