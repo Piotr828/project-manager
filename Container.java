@@ -2,7 +2,6 @@ import javax.swing.*;
 import java.io.*;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.io.Serializable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -22,7 +21,8 @@ import java.time.LocalDate;
 
 
 
-class Task{
+class Task implements Serializable{
+    private static final long serialVersionUID = 1L;
 	String name;
 	boolean status;
 	byte diffic;
@@ -33,7 +33,8 @@ class Task{
 	}
 };
 
-class Project {
+class Project implements Serializable {
+    private static final long serialVersionUID = 1L;
 	byte progress;
 	long start;
 	long deadline;
@@ -118,8 +119,9 @@ public int progress() {
 };
 
 
-class Container{
-	byte sortby;
+class Container implements Serializable{
+    private static final long serialVersionUID = 1L;
+	public byte sortby;
     	List<Project> projects = new ArrayList<>();
 	public void addProject(Project project) {
         projects.add(project);

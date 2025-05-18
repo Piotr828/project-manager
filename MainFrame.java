@@ -2,10 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 
 public class MainFrame extends JFrame {
+    private final Container container;
     private CardLayout cardLayout;
     private JPanel mainPanel;
     
     public MainFrame(Container container) {
+        this.container=container;
         setTitle("Project Manager");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 700);
@@ -26,7 +28,7 @@ public class MainFrame extends JFrame {
     }
     
     public void showProjectDetail(Project project) {
-        ProjectDetailView detailView = new ProjectDetailView(project, this);
+        ProjectDetailView detailView = new ProjectDetailView(project, this, container);
         mainPanel.add(detailView, "projectDetail");
         cardLayout.show(mainPanel, "projectDetail");
     }

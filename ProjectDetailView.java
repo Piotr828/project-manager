@@ -4,7 +4,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 
 public class ProjectDetailView extends JPanel {
-    public ProjectDetailView(Project project, MainFrame frame) {
+    private final Container container; 
+
+    public ProjectDetailView(Project project, MainFrame frame, Container container) {
+        this.container=container;
         setLayout(new BorderLayout());
         setBorder(new EmptyBorder(20, 20, 20, 20));
 
@@ -54,6 +57,7 @@ public class ProjectDetailView extends JPanel {
 
     private void showEditForm(Project project, MainFrame frame) {
         ProjectForm form = new ProjectForm(project, p -> {
+            Main.saveProjects(container);
             frame.showDashboard();
             frame.showProjectDetail(p);
         });
@@ -61,7 +65,7 @@ public class ProjectDetailView extends JPanel {
     }
 
     private void showAddTaskForm(Project project) {
-        TaskForm form = new TaskForm(project, t -> {
+        TaskForm form = new TaskForm(project,container, t -> {
             project.addTask(t);
             // Zastąp obecny widok nową instancją
             MainFrame frame = (MainFrame) SwingUtilities.getWindowAncestor(this);

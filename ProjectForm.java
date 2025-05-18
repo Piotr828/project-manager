@@ -131,6 +131,7 @@ public class ProjectForm extends JDialog {
             );
 
             container.addProject(project);
+            Main.saveProjects(container);
             onSuccess.run();
             dispose();
         });

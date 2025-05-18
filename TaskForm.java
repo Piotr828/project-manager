@@ -4,7 +4,13 @@ import java.awt.event.ActionEvent;
 import java.util.function.Consumer;
 
 public class TaskForm extends JDialog {
-    public TaskForm(Project project, Consumer<Task> onSuccess) {
+    private final Container container;
+    private final Project project;
+
+    public TaskForm(Project project,Container container,Consumer<Task> onSuccess) {
+        this.project=project;
+        this.container=container;
+
         setTitle("Nowe zadanie");
         setModal(true);
         setSize(350, 250);
@@ -41,6 +47,7 @@ public class TaskForm extends JDialog {
             );
 
             onSuccess.accept(task);
+            Main.saveProjects(container);
             dispose();
         });
 

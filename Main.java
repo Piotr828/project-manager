@@ -2,19 +2,43 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.util.List;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 
 
 public class Main {
+    private static final  String SAVE_FILE = "project.ser";
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             // Inicjalizacja z przykładowymi danymi
-            Container container = initSampleData();
+            Container container = loadProjects();
+            if(container == null){
+                container=initSampleData(); // Inicjalizacja z przykładowymi danymi
+            }
             ImageIcon icon = new ImageIcon("Icon.png");
 
             // Poprawka: deklarujemy zmienną frame
             MainFrame frame = new MainFrame(container);
             frame.setIconImage(icon.getImage());
         });
+    }
+
+    private static Container loadProjects() {
+        File file = new File(SAVE_FILE);
+        if (!file.exists()){
+            return null;
+        }
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))){
+            return (Container) ois.readObject();
+        } catch(IOException|ClassNotFoundException e){
+            System.err.println("Nastąpił problem z otworzeniem pliku: "+ e.getMessage());
+            return null;
+        }
+
     }
 
 
@@ -32,5 +56,21 @@ public class Main {
         container.addProject(p2);
         
         return container;
+    }
+    
+    public static void saveProjects(Container container) {
+        try {
+            File file = new File(SAVE_FILE);
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+            try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
+                oos.writeObject(container);
+            }
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(null, 
+                "Błąd zapisu projektu: " + e.getMessage(), 
+                "Błąd", JOptionPane.ERROR_MESSAGE);
+        }
     }
 }
