@@ -1,10 +1,17 @@
-import javax.swing.*;
 import java.awt.*;
 import java.util.Date;
+import javax.swing.*;
 
 public class ProjectForm extends JDialog {
     public ProjectForm(Container container, Runnable onSuccess) {
-        setTitle("Nowy projekt");
+        this (null, container, p ->{
+            container.addProject(p);
+            onSuccess.run();
+        });
+    }
+
+    public ProjectForm(Project project, Container container, java.util.function.Consumer<Project> onSuccess) {
+        setTitle(project == null ? "Dodaj projekt" : "Edytuj projekt");
         setModal(true);
         setSize(400, 600);
         setResizable(false);
@@ -13,7 +20,7 @@ public class ProjectForm extends JDialog {
 
         // === NAGŁÓWEK ===
         JPanel header = new JPanel(new BorderLayout());
-        JLabel title = new JLabel("Dodaj projekt", SwingConstants.CENTER);
+        JLabel title = new JLabel(project == null ? "Dodaj projekt" : "Edytuj projekt", SwingConstants.CENTER);
         title.setFont(new Font("Arial", Font.BOLD, 24));
         header.setBorder(BorderFactory.createEmptyBorder(20, 0, 0, 0));
         header.add(title, BorderLayout.CENTER);
@@ -33,6 +40,9 @@ public class ProjectForm extends JDialog {
 
         // === Nazwa ===
         JTextField nameField = new JTextField();
+        if (project !=null){
+            nameField.setText(project.name);
+        }
         nameField.setFont(new Font("Arial", Font.PLAIN, 18));
         nameField.setPreferredSize(new Dimension(200, 40));
 
@@ -43,6 +53,9 @@ public class ProjectForm extends JDialog {
 
         // === Opis ===
         JTextArea descArea = new JTextArea(5, 20);
+        if (project != null) {
+            descArea.setText(project.descript);
+        }
         descArea.setFont(new Font("Arial", Font.PLAIN, 14));
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
@@ -60,6 +73,8 @@ public class ProjectForm extends JDialog {
         gbc.weighty = 0;
 
         // === Data rozpoczęcia ===
+        Date startDate = project == null ? new Date():
+            new Date(project.start * 86400L * 1000);
         JSpinner startSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
         startSpinner.setEditor(new JSpinner.DateEditor(startSpinner, "dd.MM.yyyy"));
         startSpinner.setPreferredSize(new Dimension(200, 40));
@@ -70,6 +85,8 @@ public class ProjectForm extends JDialog {
         panel.add(startSpinner, gbc);
 
         // === Termin końcowy ===
+        Date deadlineDate = project == null ? new Date():
+            new Date(project.deadline * 86400L * 1000);
         JSpinner deadlineSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
         deadlineSpinner.setEditor(new JSpinner.DateEditor(deadlineSpinner, "dd.MM.yyyy"));
         deadlineSpinner.setPreferredSize(new Dimension(200, 40));
@@ -80,12 +97,17 @@ public class ProjectForm extends JDialog {
         panel.add(deadlineSpinner, gbc);
 
         // === Wybór koloru ===
-        Color[] selectedColor = {Color.WHITE};
+        
+        Color initialColor = project == null ? Color.WHITE : 
+            new Color(project.red, project.green, project.blue);
+        Color[] selectedColor = {initialColor};
+
 
         gbc.gridy = row++;
         panel.add(new JLabel("Kolor:"), gbc);
 
         JButton colorButton = new JButton("Wybierz kolor");
+        colorButton.setBackground((initialColor));
         colorButton.setPreferredSize(new Dimension(10, 40));
         gbc.gridy = row++;
         panel.add(colorButton, gbc);
@@ -116,30 +138,37 @@ public class ProjectForm extends JDialog {
                 nameField.setBorder(UIManager.getLookAndFeel().getDefaults().getBorder("TextField.border"));
             }
 
-            Date startDate = (Date) startSpinner.getValue();
-            Date deadlineDate = (Date) deadlineSpinner.getValue();
-            Color color = selectedColor[0];
+            if (project == null) {
+                // Tworzenie nowego projektu
+                Project newProject = new Project(
+                    name,
+                    descArea.getText(),
+                    ((Date)startSpinner.getValue()).toInstant().getEpochSecond() / 86400,
+                    ((Date)deadlineSpinner.getValue()).toInstant().getEpochSecond() / 86400,
+                    selectedColor[0].getRed(),
+                    selectedColor[0].getGreen(),
+                    selectedColor[0].getBlue()
+                );
+                onSuccess.accept(newProject);
+            } else {
+                // Edycja istniejącego projektu
+                project.name = name;
+                project.descript = descArea.getText();
+                project.start = ((Date)startSpinner.getValue()).toInstant().getEpochSecond() / 86400;
+                project.deadline = ((Date)deadlineSpinner.getValue()).toInstant().getEpochSecond() / 86400;
+                project.red = selectedColor[0].getRed();
+                project.green = selectedColor[0].getGreen();
+                project.blue = selectedColor[0].getBlue();
+                project.calculatePredict();
+                onSuccess.accept(project);
+            }
 
-            Project project = new Project(
-                name,
-                descArea.getText(),
-                startDate.toInstant().getEpochSecond() / 86400,
-                deadlineDate.toInstant().getEpochSecond() / 86400,
-                color.getRed(),
-                color.getGreen(),
-                color.getBlue()
-            );
-
-            container.addProject(project);
-            Main.saveProjects(container);
-            onSuccess.run();
+            if (container != null) {
+                Main.saveProjects(container);
+            }
             dispose();
         });
 
         add(panel, BorderLayout.CENTER);
-    }
-
-    public ProjectForm(Project project, java.util.function.Consumer<Project> onSuccess) {
-        // TODO: wersja edycji
     }
 }

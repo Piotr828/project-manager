@@ -1,7 +1,6 @@
+import java.awt.*;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
-import java.awt.*;
-import java.awt.event.ActionEvent;
 
 public class ProjectDetailView extends JPanel {
     private final Container container; 
@@ -56,10 +55,10 @@ public class ProjectDetailView extends JPanel {
     }
 
     private void showEditForm(Project project, MainFrame frame) {
-        ProjectForm form = new ProjectForm(project, p -> {
+        ProjectForm form = new ProjectForm(project,container, updatedProject -> {
             Main.saveProjects(container);
             frame.showDashboard();
-            frame.showProjectDetail(p);
+            frame.showProjectDetail(updatedProject);
         });
         form.setVisible(true);
     }
