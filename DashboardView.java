@@ -22,9 +22,17 @@ public class DashboardView extends JPanel {
         title.setFont(new Font("Arial", Font.BOLD, 24));
         header.add(title, BorderLayout.WEST);
 
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0)); // Panel na przyciski
+
         JButton addButton = new JButton("+ Nowy projekt");
         addButton.addActionListener(this::showAddProjectForm);
-        header.add(addButton, BorderLayout.EAST);
+        buttonPanel.add(addButton);
+
+        JButton exportButton = new JButton("Eksportuj do ICS");
+        exportButton.addActionListener(this::exportICS);
+        buttonPanel.add(exportButton);
+
+        header.add(buttonPanel, BorderLayout.EAST);
         add(header, BorderLayout.NORTH);
 
         // Panel projektów
@@ -45,6 +53,27 @@ public class DashboardView extends JPanel {
 
         refreshProjects();
     }
+private void exportICS(ActionEvent e) {
+    try {
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setDialogTitle("Zapisz plik ICS");
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+            if (!filePath.endsWith(".ics")) {
+                filePath += ".ics";
+            }
+
+            // Generujemy ICS
+            Calendar calendar = new Calendar(container);
+            calendar.saveToFile(filePath);
+
+            JOptionPane.showMessageDialog(this, "Plik ICS zapisano jako:\n" + filePath, "Eksport zakończony", JOptionPane.INFORMATION_MESSAGE);
+        }
+    } catch (Exception ex) {
+        JOptionPane.showMessageDialog(this, "Błąd podczas eksportu: " + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
+    }
+}
 
     private void refreshProjects() {
         projectsPanel.removeAll();

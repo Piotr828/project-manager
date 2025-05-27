@@ -2,12 +2,7 @@ import javax.swing.*;
 import java.io.*;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.regex.Pattern;
-import java.util.regex.Matcher;
-import java.util.Date;
+import java.util.*;
 import java.text.SimpleDateFormat;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -17,7 +12,9 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
-
+import java.text.SimpleDateFormat;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
 
 
@@ -258,7 +255,6 @@ try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
 
     public static String enhash(String input) {
         try {
-            // Tworzymy obiekt MessageDigest dla algorytmu SHA-256
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
             byte[] hashBytes = digest.digest(input.getBytes());
             StringBuilder hexString = new StringBuilder(hashBytes.length * 2); // Wstępna alokacja pamięci
@@ -274,6 +270,67 @@ try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
     }
 }
 
-// class Calendar{
+class Calendar {
+    private StringBuilder sb;
+    private SimpleDateFormat sdf;
 
-// }
+    public Calendar(Container container) {
+        sb = new StringBuilder();
+        sb.append("BEGIN:VCALENDAR\n");
+        sb.append("VERSION:2.0\n");
+        sb.append("PRODID:-//ProjectManager//ICS Generator//EN\n");
+
+        sdf = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
+        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        for (Project project : container.projects) {
+            addEvent(project);
+        }
+
+        sb.append("END:VCALENDAR\n");
+    }
+
+    private void addEvent(Project project) {
+        sb.append("BEGIN:VEVENT\n");
+        sb.append("UID:").append(UUID.randomUUID().toString()).append("\n");
+        sb.append("DTSTAMP:").append(sdf.format(new Date())).append("\n");
+        sb.append("SUMMARY:").append(escapeText(project.name)).append("\n");
+        sb.append("DESCRIPTION:").append(escapeText(buildDescription(project))).append("\n");
+        sb.append("DTSTART:").append(formatDate(project.start)).append("\n");
+        sb.append("DTEND:").append(formatDate(project.deadline)).append("\n");
+        sb.append("END:VEVENT\n");
+    }
+
+    private String buildDescription(Project project) {
+        StringBuilder desc = new StringBuilder();
+        desc.append(project.descript).append("\n");
+        desc.append("Zadania:\n");
+        for (Task task : project.tasks) {
+            desc.append("- ").append(task.name).append("\n");
+        }
+        return desc.toString();
+    }
+
+    private String escapeText(String text) {
+        if (text == null) return "";
+        return text.replace("\\", "\\\\")
+                   .replace("\n", "\\n")
+                   .replace(",", "\\,")
+                   .replace(";", "\\;");
+    }
+
+    private String formatDate(long timestampDays) {
+        long millis = timestampDays * 86400000L; // Konwersja dni Unix do milisekund
+        return sdf.format(new Date(millis));
+    }
+
+    public void saveToFile(String filePath) throws IOException {
+        try (FileWriter writer = new FileWriter(filePath)) {
+            writer.write(sb.toString());
+        }
+    }
+
+    public String getICS() {
+        return sb.toString();
+    }
+}
