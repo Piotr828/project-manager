@@ -39,6 +39,26 @@ public class ProjectDetailView extends JPanel {
         // Lista zadań
         JPanel tasksPanel = new JPanel();
         tasksPanel.setLayout(new BoxLayout(tasksPanel, BoxLayout.Y_AXIS));
+
+        JPanel tasksHeader = new JPanel(new BorderLayout());
+        tasksHeader.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 0));
+
+        JLabel tasksTitle = new JLabel("Zadania");
+        tasksTitle.setFont(new Font("Arial", Font.BOLD, 16));
+        tasksHeader.add(tasksTitle, BorderLayout.WEST);
+
+        JLabel difficultyTitle = new JLabel("Trudność");
+        difficultyTitle.setFont(new Font("Arial", Font.BOLD, 16));
+        difficultyTitle.setHorizontalAlignment(SwingConstants.RIGHT);
+        difficultyTitle.setPreferredSize(new Dimension(80, 20));
+        tasksHeader.add(difficultyTitle, BorderLayout.EAST);
+
+        tasksPanel.add(tasksHeader);
+
+        for (Task task : project.tasks) {
+            tasksPanel.add(new TaskItem(task));
+            tasksPanel.add(Box.createRigidArea(new Dimension(0, 5)));
+        }
         
         for (Task task : project.tasks) {
             tasksPanel.add(new TaskItem(task));

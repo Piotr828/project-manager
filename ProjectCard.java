@@ -6,9 +6,9 @@ import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import javax.swing.*;
-import javax.swing.plaf.basic.BasicProgressBarUI;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 
 public class ProjectCard extends JPanel {
 
@@ -26,9 +26,12 @@ public class ProjectCard extends JPanel {
             )
         ));
 
-        JLabel nameLabel = new JLabel(project.name);
+        String displayName = project.name.length() > 30 ? 
+            project.name.substring(0, 27) + "..." : project.name;
+        JLabel nameLabel = new JLabel(displayName);
         nameLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        nameLabel.setToolTipText(project.name);
 
         JTextArea descArea = new JTextArea(project.descript);
         descArea.setFont(new Font("SansSerif", Font.PLAIN, 13));

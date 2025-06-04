@@ -1,9 +1,9 @@
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class DashboardView extends JPanel {
     private final MainFrame frame;
@@ -21,6 +21,37 @@ public class DashboardView extends JPanel {
         JLabel title = new JLabel("Twoje projekty");
         title.setFont(new Font("Arial", Font.BOLD, 24));
         header.add(title, BorderLayout.WEST);
+        
+        JPanel rightPanel = new JPanel(new BorderLayout());
+
+        //Panel sortowania
+        JPanel sortPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 5, 0));
+        sortPanel.setOpaque(false);
+
+        JLabel sortLabel = new JLabel("Sortuj wg: ");
+        sortPanel.add(sortLabel);
+
+        JComboBox<String> sortCombo = new JComboBox<>(new String[]{
+            "Nazwy (A-Z)", "Data rozpoczęcia", "Terminu", 
+            "Trudności", "Postępu", "Przewidywania", 
+            "Opóźnienia", "Koloru"
+        });
+        sortCombo.setSelectedIndex(Math.abs(container.sortby));
+        sortPanel.add(sortCombo);
+
+        JCheckBox reverseCheck = new JCheckBox("Odwrotnie");
+        reverseCheck.setSelected(container.sortby <0);
+        sortPanel.add(reverseCheck);
+
+        JButton sortButton = new JButton("Sortuj");
+        sortButton.addActionListener(e -> {
+            int selected = sortCombo.getSelectedIndex();
+            container.sortby = (byte) (reverseCheck.isSelected() ? -(selected + 1) : (selected + 1));
+            refreshProjects();
+        });
+        sortPanel.add(sortButton);
+
+        rightPanel.add(sortPanel, BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0)); // Panel na przyciski
 
@@ -32,7 +63,8 @@ public class DashboardView extends JPanel {
         exportButton.addActionListener(this::exportICS);
         buttonPanel.add(exportButton);
 
-        header.add(buttonPanel, BorderLayout.EAST);
+        rightPanel.add(buttonPanel, BorderLayout.SOUTH);
+        header.add(rightPanel, BorderLayout.EAST);
         add(header, BorderLayout.NORTH);
 
         // Panel projektów

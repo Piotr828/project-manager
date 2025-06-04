@@ -1,6 +1,6 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import javax.swing.*;
 
 public class TaskItem extends JPanel {
     private final Task task;
@@ -20,8 +20,9 @@ public class TaskItem extends JPanel {
         checkBox.setFont(new Font("Arial", Font.PLAIN, 16));
         add(checkBox, BorderLayout.CENTER);
 
-        // Trudność zadania
-        JLabel difficultyLabel = new JLabel("Trudność: " + task.diffic);
+        JLabel difficultyLabel = new JLabel(String.valueOf(task.diffic));
+        difficultyLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        difficultyLabel.setPreferredSize(new Dimension(80, 20)); 
         add(difficultyLabel, BorderLayout.EAST);
     }
 
