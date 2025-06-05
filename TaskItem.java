@@ -10,19 +10,21 @@ public class TaskItem extends JPanel {
         setLayout(new BorderLayout());
         setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+            BorderFactory.createEmptyBorder(5, 10, 5, 10)
         ));
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
-        // Checkbox i nazwa zadania
+        // Checkbox z nazwą zadania po lewej
         JCheckBox checkBox = new JCheckBox(task.name, task.status);
         checkBox.addActionListener(this::toggleTaskStatus);
-        checkBox.setFont(new Font("Arial", Font.PLAIN, 16));
-        add(checkBox, BorderLayout.CENTER);
+        checkBox.setFont(new Font("Arial", Font.PLAIN, 13));
 
-        JLabel difficultyLabel = new JLabel(String.valueOf(task.diffic));
-        difficultyLabel.setHorizontalAlignment(SwingConstants.RIGHT);
-        difficultyLabel.setPreferredSize(new Dimension(80, 20)); 
+        // Trudność po prawej (ustawienie stałej szerokości)
+        JLabel difficultyLabel = new JLabel(String.valueOf(task.diffic), SwingConstants.CENTER);
+        difficultyLabel.setPreferredSize(new Dimension(50, 20));
+        difficultyLabel.setFont(new Font("Arial", Font.PLAIN, 13));
+
+        add(checkBox, BorderLayout.CENTER);
         add(difficultyLabel, BorderLayout.EAST);
     }
 

@@ -36,7 +36,7 @@ public class DashboardView extends JPanel {
             "Trudności", "Postępu", "Przewidywania", 
             "Opóźnienia", "Koloru"
         });
-        sortCombo.setSelectedIndex(Math.abs(container.sortby));
+        sortCombo.setSelectedIndex(Math.abs(container.sortby) - 1); 
         sortPanel.add(sortCombo);
 
         JCheckBox reverseCheck = new JCheckBox("Odwrotnie");
@@ -45,7 +45,7 @@ public class DashboardView extends JPanel {
 
         JButton sortButton = new JButton("Sortuj");
         sortButton.addActionListener(e -> {
-            int selected = sortCombo.getSelectedIndex();
+            int selected = sortCombo.getSelectedIndex() + 1;
             container.sortby = (byte) (reverseCheck.isSelected() ? -(selected + 1) : (selected + 1));
             refreshProjects();
         });
@@ -109,8 +109,13 @@ private void exportICS(ActionEvent e) {
 
     private void refreshProjects() {
         projectsPanel.removeAll();
-        container.sortProjects();
-
+        
+        // Dodajemy informację o sortowaniu
+        JLabel sortInfo = new JLabel(getSortDescription());
+        sortInfo.setFont(new Font("Arial", Font.ITALIC, 12));
+        sortInfo.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 0));
+        projectsPanel.add(sortInfo);
+        
         for (Project project : container.projects) {
             project.calculatePredict();
             ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
@@ -123,8 +128,29 @@ private void exportICS(ActionEvent e) {
         repaint();
     }
 
+    private String getSortDescription() {
+        String[] sortOptions = {
+            "Nazwa (A-Z)", 
+            "Data rozpoczęcia", 
+            "Termin", 
+            "Suma trudności", 
+            "Postęp", 
+            "Przewidywane zakończenie", 
+            "Opóźnienie", 
+            "Kolor"
+        };
+        
+        int absSort = Math.abs(container.sortby) - 1; // -1 bo wartości 1-8
+        if (absSort < 0 || absSort >= sortOptions.length) {
+            return "Sortowanie: domyślne";
+        }
+        
+        String direction = container.sortby < 0 ? "malejąco" : "rosnąco";
+        return "Sortowanie: " + sortOptions[absSort] + " (" + direction + ")";
+    }
+
     private void resizeProjectCards() {
-        int width = projectsPanel.getWidth();
+        int width = projectsPanel.getWidth() - 30; // Margines na scrollbar
         for (Component comp : projectsPanel.getComponents()) {
             if (comp instanceof ProjectCard) {
                 ((ProjectCard) comp).setMaximumSize(new Dimension(width, 220));

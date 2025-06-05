@@ -1,20 +1,12 @@
-import javax.swing.*;
 import java.io.*;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.util.*;
-import java.text.SimpleDateFormat;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import javax.swing.SwingUtilities;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
-import java.time.LocalDate;
 import java.text.SimpleDateFormat;
-import java.util.regex.Pattern;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 
 
@@ -226,7 +218,7 @@ try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             return;  // Jeśli hasło jest niepoprawne, nie tworzymy obiektu
         }
 }
-    private boolean isValidEmail(String email) {
+    public static boolean isValidEmail(String email) {
         String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
         Pattern pattern = Pattern.compile(emailRegex);
         Matcher matcher = pattern.matcher(email);
@@ -234,7 +226,9 @@ try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
     }
 
 
-    private boolean isValidPassword(String password) {
+    public static void main(String[] args) {
+        
+    } boolean isValidPassword(String password) {
         // Hasło musi mieć co najmniej 8 znaków, zawierać jedną dużą literę, jedną cyfrę i jeden znak specjalny
         String passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
         Pattern pattern = Pattern.compile(passwordRegex);
