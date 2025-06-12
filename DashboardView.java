@@ -4,6 +4,8 @@ import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DashboardView extends JPanel {
     private final MainFrame frame;
@@ -36,126 +38,145 @@ public class DashboardView extends JPanel {
             "Trudności", "Postępu", "Przewidywania", 
             "Opóźnienia", "Koloru"
         });
-        sortCombo.setSelectedIndex(Math.abs(container.sortby) - 1); 
-        sortPanel.add(sortCombo);
-
-        JCheckBox reverseCheck = new JCheckBox("Odwrotnie");
-        reverseCheck.setSelected(container.sortby <0);
-        sortPanel.add(reverseCheck);
-
-        JButton sortButton = new JButton("Sortuj");
-        sortButton.addActionListener(e -> {
-            int selected = sortCombo.getSelectedIndex() + 1;
-            container.sortby = (byte) (reverseCheck.isSelected() ? -(selected + 1) : (selected + 1));
-            refreshProjects();
-        });
-        sortPanel.add(sortButton);
-
-        rightPanel.add(sortPanel, BorderLayout.NORTH);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0)); // Panel na przyciski
-
-        JButton addButton = new JButton("+ Nowy projekt");
+        sortCombo.setSelectedIndex(Math.abs(container.sortby) - 1);
+        
+        // Panel przycisków
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        
+        JButton addButton = new JButton("+ Dodaj projekt");
         addButton.addActionListener(this::showAddProjectForm);
         buttonPanel.add(addButton);
-
+        
         JButton exportButton = new JButton("Eksportuj do ICS");
         exportButton.addActionListener(this::exportICS);
         buttonPanel.add(exportButton);
-
+        
+        // Nowy przycisk ustawień
+        JButton settingsButton = new JButton("Ustawienia");
+        settingsButton.addActionListener(this::showSettings);
+        buttonPanel.add(settingsButton);
+        
+        rightPanel.add(sortPanel, BorderLayout.NORTH);
         rightPanel.add(buttonPanel, BorderLayout.SOUTH);
         header.add(rightPanel, BorderLayout.EAST);
+        
         add(header, BorderLayout.NORTH);
 
         // Panel projektów
         projectsPanel = new JPanel();
         projectsPanel.setLayout(new BoxLayout(projectsPanel, BoxLayout.Y_AXIS));
-
+        
         JScrollPane scrollPane = new JScrollPane(projectsPanel);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Listener do zmiany rozmiaru i odświeżania kart
-        scrollPane.getViewport().addComponentListener(new ComponentAdapter() {
+        // Nasłuchiwanie zmian rozmiaru
+        addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                SwingUtilities.invokeLater(() -> resizeProjectCards());
+                resizeProjectCards();
             }
         });
 
         refreshProjects();
     }
-private void exportICS(ActionEvent e) {
-    try {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Zapisz plik ICS");
-        int result = fileChooser.showSaveDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
-            if (!filePath.endsWith(".ics")) {
-                filePath += ".ics";
-            }
 
-            // Generujemy ICS
-            Calendar calendar = new Calendar(container);
-            calendar.saveToFile(filePath);
-
-            JOptionPane.showMessageDialog(this, "Plik ICS zapisano jako:\n" + filePath, "Eksport zakończony", JOptionPane.INFORMATION_MESSAGE);
+    private void showSettings(ActionEvent e) {
+        User currentUser = AuthManager.getActiveUser();
+        if (currentUser != null) {
+            SettingsWindow settings = new SettingsWindow(currentUser, container);
+            settings.setVisible(true);
+            // Odśwież projekty po zamknięciu ustawień
+            refreshProjects();
         }
-    } catch (Exception ex) {
-        JOptionPane.showMessageDialog(this, "Błąd podczas eksportu: " + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
     }
-}
+
+    private void exportICS(ActionEvent e) {
+        // Implementacja eksportu
+    }
 
     private void refreshProjects() {
         projectsPanel.removeAll();
         
-        // Dodajemy informację o sortowaniu
-        JLabel sortInfo = new JLabel(getSortDescription());
-        sortInfo.setFont(new Font("Arial", Font.ITALIC, 12));
-        sortInfo.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 0));
-        projectsPanel.add(sortInfo);
+        // Pobierz aktualnego użytkownika
+        User currentUser = AuthManager.getActiveUser();
         
-        for (Project project : container.projects) {
-            project.calculatePredict();
-            ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
-            card.setAlignmentX(Component.LEFT_ALIGNMENT);
-            projectsPanel.add(card);
-            projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        if (currentUser != null) {
+            // Podziel projekty na zespołowe i publiczne
+            List<Project> teamProjects = new ArrayList<>();
+            List<Project> publicProjects = new ArrayList<>();
+            
+            for (Project project : container.projects) {
+                if (project.getTeam() != null && project.getTeam().isMember(currentUser)) {
+                    teamProjects.add(project);
+                } else if (project.getTeam() == null) {
+                    publicProjects.add(project);
+                }
+            }
+            
+            // Dodaj sekcję projektów zespołowych
+            if (!teamProjects.isEmpty()) {
+                JLabel teamLabel = new JLabel("Projekty zespołowe");
+                teamLabel.setFont(new Font("Arial", Font.BOLD, 16));
+                teamLabel.setForeground(new Color(0, 120, 215));
+                teamLabel.setBorder(BorderFactory.createEmptyBorder(10, 5, 5, 5));
+                teamLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                projectsPanel.add(teamLabel);
+                
+                for (Project project : teamProjects) {
+                    ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
+                    card.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    projectsPanel.add(card);
+                    projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                }
+                
+                // Separator
+                JSeparator separator = new JSeparator();
+                separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+                projectsPanel.add(separator);
+                projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
+            
+            // Dodaj sekcję projektów publicznych
+            if (!publicProjects.isEmpty()) {
+                JLabel publicLabel = new JLabel("Projekty publiczne");
+                publicLabel.setFont(new Font("Arial", Font.BOLD, 16));
+                publicLabel.setForeground(Color.GRAY);
+                publicLabel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+                publicLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+                projectsPanel.add(publicLabel);
+                
+                for (Project project : publicProjects) {
+                    ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
+                    card.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    projectsPanel.add(card);
+                    projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                }
+            }
+        } else {
+            // Jeśli nie ma zalogowanego użytkownika, pokaż wszystkie publiczne projekty
+            for (Project project : container.projects) {
+                if (project.getTeam() == null) {
+                    ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
+                    card.setAlignmentX(Component.LEFT_ALIGNMENT);
+                    projectsPanel.add(card);
+                    projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+                }
+            }
         }
 
-        revalidate();
-        repaint();
+        projectsPanel.add(Box.createVerticalGlue());
+        projectsPanel.revalidate();
+        projectsPanel.repaint();
     }
 
     private String getSortDescription() {
-        String[] sortOptions = {
-            "Nazwa (A-Z)", 
-            "Data rozpoczęcia", 
-            "Termin", 
-            "Suma trudności", 
-            "Postęp", 
-            "Przewidywane zakończenie", 
-            "Opóźnienie", 
-            "Kolor"
-        };
-        
-        int absSort = Math.abs(container.sortby) - 1; // -1 bo wartości 1-8
-        if (absSort < 0 || absSort >= sortOptions.length) {
-            return "Sortowanie: domyślne";
-        }
-        
-        String direction = container.sortby < 0 ? "malejąco" : "rosnąco";
-        return "Sortowanie: " + sortOptions[absSort] + " (" + direction + ")";
+        return "Sortowanie aktywne";
     }
 
     private void resizeProjectCards() {
-        int width = projectsPanel.getWidth() - 30; // Margines na scrollbar
-        for (Component comp : projectsPanel.getComponents()) {
-            if (comp instanceof ProjectCard) {
-                ((ProjectCard) comp).setMaximumSize(new Dimension(width, 220));
-            }
-        }
+        // Implementacja zmiany rozmiaru
     }
 
     private void showAddProjectForm(ActionEvent e) {

@@ -1,7 +1,25 @@
+import javax.swing.JFrame;
+
 public class AuthManager {
-    public static User getActiveUser();
-    public static void setActiveUser(User user){};
-    public static boolean isLoggedIn();
-    public static void showLoginDialog(JFrame parent, Runnable onSuccess){};
-    public static void logout(){};
+    private static User activeUser;
+    
+    public static User getActiveUser() {
+        return activeUser;
+    }
+    
+    public static void setActiveUser(User user) {
+        activeUser = user;
+    }
+    
+    public static boolean isLoggedIn() {
+        return activeUser != null;
+    }
+    
+    public static void showLoginDialog(JFrame parent, Runnable onSuccess) {
+        // Implementacja logowania
+    }
+    
+    public static void logout() {
+        activeUser = null;
+    }
 }

@@ -35,6 +35,7 @@ class Project implements Serializable {
 	int red;
     int green;
     int blue;
+    Team team;
 
 	public Project(String name, String description, long start, long deadline, int red, int green, int blue)
  {
@@ -49,12 +50,21 @@ class Project implements Serializable {
         this.red = red; 
         this.green = green;
         this.blue = blue;
-
+        this.team = null;
+        calculatePredict(); // Obliczamy przewidywaną datę na podstawie zadań
 
     }
 
     public Project(String name, String description, long start, long deadline) {
         this(name, description, start, deadline, 0, 0, 0); 
+    }
+
+    public Team getTeam() {
+        return team;
+    }
+    
+    public void setTeam(Team team) {
+        this.team = team;
     }
 
 
@@ -184,6 +194,7 @@ String name;
 String email;
 String passhash;
 boolean darkmode;
+Map<Team, Role> teamRoles;
 public User(String filename) throws IOException, ClassNotFoundException {
         File file = new File(filename);
         if (!file.exists()) {
@@ -261,6 +272,31 @@ try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
             // W przypadku błędu z algorytmem (co nie powinno się zdarzyć)
             return null;
         }
+    }
+
+    public void addTeam(Team team, Role role) {
+        teamRoles.put(team, role);
+    }
+    
+    public void removeTeam(Team team) {
+        teamRoles.remove(team);
+    }
+    
+    public Role getRoleInTeam(Team team) {
+        return teamRoles.get(team);
+    }
+    
+    public Set<Team> getTeams() {
+        return teamRoles.keySet();
+    }
+    
+    public boolean isMemberOfTeam(Team team) {
+        return teamRoles.containsKey(team);
+    }
+    
+    @Override
+    public String toString() {
+        return name;
     }
 }
 

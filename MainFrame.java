@@ -12,6 +12,8 @@ public class MainFrame extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(1000, 700);
         setLocationRelativeTo(null);
+
+        setupMenuBar();
         
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
@@ -21,6 +23,26 @@ public class MainFrame extends JFrame {
         
         add(mainPanel);
         setVisible(true);
+    }
+
+    private void setupMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        
+        JMenu settingsMenu = new JMenu("Ustawienia");
+        JMenuItem teamsItem = new JMenuItem("Zarządzanie zespołami");
+        teamsItem.addActionListener(e -> showTeamSettings());
+        settingsMenu.add(teamsItem);
+        
+        menuBar.add(settingsMenu);
+        setJMenuBar(menuBar);
+    }
+    
+    private void showTeamSettings() {
+        User currentUser = AuthManager.getActiveUser();
+        if (currentUser != null) {
+            SettingsWindow settings = new SettingsWindow(currentUser, container);
+            settings.setVisible(true);
+        }
     }
     
     public void showDashboard() {
