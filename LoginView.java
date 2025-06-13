@@ -59,7 +59,7 @@ public class LoginView extends JPanel {
         add(loginButton, gbc);
 
         // Register Link/Button
-        JButton registerLinkButton = new JButton("Nie masz konto? Zarejestruj się tutaj.");
+        JButton registerLinkButton = new JButton("Nie masz konta? Zarejestruj się tutaj.");
         registerLinkButton.setFont(new Font("Arial", Font.PLAIN, 12));
         registerLinkButton.setForeground(Color.BLUE);
         registerLinkButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
