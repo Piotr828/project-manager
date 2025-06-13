@@ -2,10 +2,10 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.util.ArrayList;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class DashboardView extends JPanel {
     private final MainFrame frame;
@@ -96,7 +96,7 @@ public class DashboardView extends JPanel {
         // Implementacja eksportu
     }
 
-    private void refreshProjects() {
+    public void refreshProjects() {
         projectsPanel.removeAll();
         
         // Pobierz aktualnego użytkownika
