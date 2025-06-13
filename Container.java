@@ -198,7 +198,7 @@ Map<Team, Role> teamRoles;
 public User(String filename) throws IOException, ClassNotFoundException {
     File file = new File(filename);
     if (!file.exists()) {
-        throw new FileNotFoundException("User file not found: " + filename);
+        throw new FileNotFoundException("Plik użytkownika nie znaleziony: " + filename);
     }
 
 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
@@ -220,11 +220,11 @@ public User(String name, String email, String password, boolean darkmode) {
 
 public User(String name, String email, String password, boolean darkmode, String filename) throws IOException {
     if (!isValidEmail(email)) {
-        System.err.println("Invalid email provided for user: " + name); 
+        System.err.println("Niepoprawny email podany dla użytkownika: " + name); 
         return; 
     }
     if (!isValidPassword(password)) { 
-        System.err.println("Invalid password provided for user: " + name); 
+        System.err.println("Niepoprawne hasło podane dla użytkownika: " + name); 
         return; 
     }
     this.name = name;
@@ -263,7 +263,7 @@ public void exportToFile(String filename) {
     try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
         oos.writeObject(this);
     } catch (IOException e) {
-        System.err.println("User export failed for " + this.name + " to " + filename + ": " + e.getMessage());
+        System.err.println("Eksport użytkownika " + this.name + " do " + filename + " nie powiódł się: " + e.getMessage());
     }
 }
 
@@ -313,7 +313,7 @@ public boolean isMemberOfTeam(Team team) {
 
 @Override
 public String toString() {
-    return name != null ? name : "Unnamed User";
+    return name != null ? name : "Użytkownik bez nazwy";
 }
 public static void main(String[] args) {
     

@@ -31,10 +31,10 @@ public class RegisterHandler {
         String errorMessage = AuthManager.register(name, email, password, darkMode);
 
         if (errorMessage == null) {
-            JOptionPane.showMessageDialog(mainFrame, "Registration successful! Please login.", "Registration Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Rejestracja zakończona sukcesem!.", "Registration Success", JOptionPane.INFORMATION_MESSAGE);
             mainFrame.showLoginView();
         } else {
-            JOptionPane.showMessageDialog(mainFrame, "Registration failed: " + errorMessage, "Registration Failed", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Błąd rejestracji: " + errorMessage, "Registration Failed", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

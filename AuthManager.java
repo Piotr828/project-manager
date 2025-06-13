@@ -9,14 +9,14 @@ public class AuthManager {
     private static final Logger LOGGER = Logger.getLogger(AuthManager.class.getName());
     private static User activeUser;
     private static List<User> users = new ArrayList<>();
-    private static final String USERS_DIR = "userdata/"; // Directory to store user files
+    private static final String USERS_DIR = "userdata/"; 
     private static final String USER_FILE_SUFFIX = ".user";
 
     static {
         File dir = new File(USERS_DIR);
         if (!dir.exists()) {
             if (!dir.mkdirs()) {
-                LOGGER.severe("Could not create user data directory: " + USERS_DIR);
+                LOGGER.severe("Nie można utworzyć katalogu danych użytkowników: " + USERS_DIR);
             }
         }
         loadUsers();
@@ -35,27 +35,26 @@ public class AuthManager {
                         users.add(user);
                     }
                 } catch (IOException | ClassNotFoundException e) {
-                    LOGGER.log(Level.SEVERE, "Error loading user from " + userFile.getAbsolutePath(), e);
+                    LOGGER.log(Level.SEVERE, "Błąd podczas ładowania użytkownika z " + userFile.getAbsolutePath(), e);
                 }
             }
         }
-        LOGGER.info("Loaded " + users.size() + " users.");
+        LOGGER.info("Załadowano " + users.size() + " użytkowników.");
     }
 
     private static void saveUser(User user) {
         if (user == null || user.email == null) {
-            LOGGER.warning("Attempted to save null user or user with null email.");
+            LOGGER.warning("Próba zapisania użytkownika null lub użytkownika z emailem null.");
             return;
         }
-        // Sanitize email to use as filename, or use a dedicated user ID
         String filenameBase = user.email.replaceAll("[^a-zA-Z0-9.-]", "_");
         String filename = USERS_DIR + filenameBase + USER_FILE_SUFFIX;
         
         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
             oos.writeObject(user);
-            LOGGER.info("Saved user: " + user.name + " to " + filename);
+            LOGGER.info("Zapisano użytkownika: " + user.name + " do " + filename);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "Error saving user " + user.name, e);
+            LOGGER.log(Level.SEVERE, "Błąd podczas zapisywania użytkownika " + user.name, e);
         }
     }
 
@@ -69,12 +68,12 @@ public class AuthManager {
 
     public static void logout() {
         activeUser = null;
-        LOGGER.info("User logged out.");
+        LOGGER.info("Użytkownik wylogowany.");
     }
 
     public static synchronized boolean login(String email, String password) {
         if (email == null || password == null) return false;
-        loadUsers(); // Refresh users list from files in case of external changes / multi-instance
+        loadUsers();
         Optional<User> userOpt = users.stream()
                                       .filter(u -> u.email != null && u.email.equals(email))
                                       .findFirst();
@@ -83,34 +82,33 @@ public class AuthManager {
             String hashedPassword = User.enhash(password);
             if (user.passhash != null && user.passhash.equals(hashedPassword)) {
                 activeUser = user;
-                LOGGER.info("User logged in: " + user.name);
+                LOGGER.info("Użytkownik zalogowany: " + user.name);
                 return true;
             } else {
-                LOGGER.warning("Login failed for email (password mismatch): " + email);
+                LOGGER.warning("Logowanie nie powiodło się dla emaila (niezgodność hasła): " + email);
             }
         } else {
-            LOGGER.warning("Login failed for email (user not found): " + email);
+            LOGGER.warning("Logowanie nie powiodło się dla emaila (użytkownik nie znaleziony): " + email);
         }
         return false;
     }
 
-    // Returns error message String or null if successful
     public static synchronized String register(String name, String email, String password, boolean darkMode) {
-        if (name == null || name.trim().isEmpty()) return "Name cannot be empty.";
-        if (email == null || email.trim().isEmpty()) return "Email cannot be empty.";
-        if (password == null || password.isEmpty()) return "Password cannot be empty.";
+        if (name == null || name.trim().isEmpty()) return "Nazwa nie może być pusta.";
+        if (email == null || email.trim().isEmpty()) return "Email nie może być pusty.";
+        if (password == null || password.isEmpty()) return "Hasło nie może być puste.";
 
-        loadUsers(); // Refresh users list
+        loadUsers(); 
 
         if (users.stream().anyMatch(u -> u.email != null && u.email.equals(email))) {
-            LOGGER.warning("Registration failed (email exists): " + email);
-            return "User with this email already exists.";
+            LOGGER.warning("Rejestracja nie powiodła się (email istnieje): " + email);
+            return "Użytkownik o tym adresie email już istnieje.";
         }
 
-        User newUser = new User(name.trim(), email.trim(), password, darkMode); // Constructor hashes password
+        User newUser = new User(name.trim(), email.trim(), password, darkMode); 
         users.add(newUser);
         saveUser(newUser);
-        LOGGER.info("User registered: " + newUser.name);
-        return null; // Success
+        LOGGER.info("Użytkownik zarejestrowany: " + newUser.name);
+        return null; 
     }
 }

@@ -1,6 +1,6 @@
-import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import javax.swing.*;
 
 public class RegisterView extends JPanel {
     private MainFrame mainFrame;
@@ -29,7 +29,7 @@ public class RegisterView extends JPanel {
         gbc.gridwidth = 2;
         add(titleLabel, gbc);
 
-        JLabel nameLabel = new JLabel("Full Name:");
+        JLabel nameLabel = new JLabel("Pełne imię:");
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
@@ -50,7 +50,7 @@ public class RegisterView extends JPanel {
         gbc.gridy = 2;
         add(emailField, gbc);
 
-        JLabel passwordLabel = new JLabel("Password:");
+        JLabel passwordLabel = new JLabel("Hasło:");
         gbc.gridx = 0;
         gbc.gridy = 3;
         add(passwordLabel, gbc);
@@ -60,7 +60,7 @@ public class RegisterView extends JPanel {
         gbc.gridy = 3;
         add(passwordField, gbc);
 
-        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+        JLabel confirmPasswordLabel = new JLabel("Potwierdź:");
         gbc.gridx = 0;
         gbc.gridy = 4;
         add(confirmPasswordLabel, gbc);
@@ -93,7 +93,7 @@ public class RegisterView extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         add(registerButton, gbc);
 
-        JButton loginLinkButton = new JButton("Already have an account? Login here.");
+        JButton loginLinkButton = new JButton("Masz juz konto? Zaloguj się tutaj!.");
         loginLinkButton.setFont(new Font("Arial", Font.PLAIN, 12));
         loginLinkButton.setForeground(Color.BLUE);
         loginLinkButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
