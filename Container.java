@@ -12,31 +12,32 @@ import java.util.regex.Pattern;
 
 class Task implements Serializable{
     private static final long serialVersionUID = 1L;
-	String name;
-	boolean status;
-	byte diffic;
-	public Task(String name, boolean status, byte diffic) {
-	    this.name = name;
-	    this.status = status;
-	    this.diffic = diffic;
-	}
+    String name;
+    boolean status;
+    byte diffic;
+    public Task(String name, boolean status, byte diffic) {
+        this.name = name;
+        this.status = status;
+        this.diffic = diffic;
+    }
 };
 
 class Project implements Serializable {
     private static final long serialVersionUID = 1L;
-	byte progress;
-	long start;
-	long deadline;
-	long predict;
-	int delay;
-	List<Task> tasks;
-	String name;
-	String descript;
-	int red;
+    byte progress;
+    long start;
+    long deadline;
+    long predict;
+    int delay;
+    List<Task> tasks;
+    String name;
+    String descript;
+    int red;
     int green;
     int blue;
+    Team team;
 
-	public Project(String name, String description, long start, long deadline, int red, int green, int blue)
+    public Project(String name, String description, long start, long deadline, int red, int green, int blue)
  {
         this.name = name;
         this.descript = description;
@@ -49,12 +50,21 @@ class Project implements Serializable {
         this.red = red; 
         this.green = green;
         this.blue = blue;
-
+        this.team = null;
+        calculatePredict(); // Obliczamy przewidywaną datę na podstawie zadań
 
     }
 
     public Project(String name, String description, long start, long deadline) {
         this(name, description, start, deadline, 0, 0, 0); 
+    }
+
+    public Team getTeam() {
+        return team;
+    }
+    
+    public void setTeam(Team team) {
+        this.team = team;
     }
 
 
@@ -68,7 +78,7 @@ class Project implements Serializable {
         tasks.add(task);
     }
     public void removeTask(Task task) {
-    	tasks.remove(task);
+        tasks.remove(task);
     }
 
 public void calculatePredict() {
@@ -110,14 +120,14 @@ public int progress() {
 
 class Container implements Serializable{
     private static final long serialVersionUID = 1L;
-	public byte sortby;
-    	List<Project> projects = new ArrayList<>();
-	public void addProject(Project project) {
+    public byte sortby;
+        List<Project> projects = new ArrayList<>();
+    public void addProject(Project project) {
         projects.add(project);
     }
 
     public void removeProject(Project project) {
-    	projects.remove(project);
+        projects.remove(project);
     }
 
 public void sortProjects() {
@@ -165,16 +175,16 @@ public void sortProjects() {
     projects.sort(comparator);
 
 
-	if (comparator != null) {
-		if (reverse) {
-		                projects.sort(comparator.reversed());
-		            } else {
-		                projects.sort(comparator);
-		            }
-		        }
+    if (comparator != null) {
+        if (reverse) {
+                        projects.sort(comparator.reversed());
+                    } else {
+                        projects.sort(comparator);
+                    }
+                }
 
-			}
-		}
+            }
+        }
 
 
 class User implements Serializable {
@@ -184,85 +194,132 @@ String name;
 String email;
 String passhash;
 boolean darkmode;
+Map<Team, Role> teamRoles;
 public User(String filename) throws IOException, ClassNotFoundException {
-        File file = new File(filename);
-        if (!file.exists()) {
-            throw new FileNotFoundException("Error");
-        }
+    File file = new File(filename);
+    if (!file.exists()) {
+        throw new FileNotFoundException("Plik użytkownika nie znaleziony: " + filename);
+    }
 
 try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
-            User loaded = (User) ois.readObject();
-            this.name = loaded.name;
-            this.email = loaded.email;
-            this.passhash = loaded.passhash;
-            this.darkmode = loaded.darkmode;
-        }
-    }
-    public User(String name, String email, String password, boolean darkmode) {
-        this.name = name;
-        this.email = email;
-        this.passhash = enhash(password);
-        this.darkmode = darkmode;
-    }
-
-   public User(String name, String email, String password, boolean darkmode, String filename) throws IOException {
-        // Sprawdzamy poprawność e-maila
-        if (!isValidEmail(email)) {
-            System.out.println("Niepoprawny adres e-mail.");
-            return;  // Jeśli e-mail jest niepoprawny, nie tworzymy obiektu
-        }
-
-        // Sprawdzamy poprawność hasła
-        if (!isValidPassword(password)) {
-            System.out.println("Hasło musi zawierać co najmniej 8 znaków, jedną wielką literę, cyfrę i znak specjalny.");
-            return;  // Jeśli hasło jest niepoprawne, nie tworzymy obiektu
-        }
-}
-    public static boolean isValidEmail(String email) {
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-        Pattern pattern = Pattern.compile(emailRegex);
-        Matcher matcher = pattern.matcher(email);
-        return matcher.matches();
-    }
-
-
-    public static void main(String[] args) {
-        
-    } boolean isValidPassword(String password) {
-        // Hasło musi mieć co najmniej 8 znaków, zawierać jedną dużą literę, jedną cyfrę i jeden znak specjalny
-        String passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
-        Pattern pattern = Pattern.compile(passwordRegex);
-        Matcher matcher = pattern.matcher(password);
-        return matcher.matches();
-    }
-
-
-
-    public void exportToFile(String filename) {
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
-            oos.writeObject(this);
-        } catch (IOException e) {
-            System.err.println("Export failed: " + e.getMessage());
-        }
-    }
-
-
-    public static String enhash(String input) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hashBytes = digest.digest(input.getBytes());
-            StringBuilder hexString = new StringBuilder(hashBytes.length * 2); // Wstępna alokacja pamięci
-            for (byte b : hashBytes) {
-                hexString.append(String.format("%02x", b));
-            }
-
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            // W przypadku błędu z algorytmem (co nie powinno się zdarzyć)
-            return null;
-        }
+        User loaded = (User) ois.readObject();
+        this.name = loaded.name;
+        this.email = loaded.email;
+        this.passhash = loaded.passhash;
+        this.darkmode = loaded.darkmode;
+        this.teamRoles = loaded.teamRoles != null ? loaded.teamRoles : new HashMap<>(); 
     }
 }
+public User(String name, String email, String password, boolean darkmode) {
+    this.name = name;
+    this.email = email;
+    this.passhash = enhash(password); 
+    this.darkmode = darkmode;
+    this.teamRoles = new HashMap<>(); 
+}
+
+public User(String name, String email, String password, boolean darkmode, String filename) throws IOException {
+    if (!isValidEmail(email)) {
+        System.err.println("Niepoprawny email podany dla użytkownika: " + name); 
+        return; 
+    }
+    if (!isValidPassword(password)) { 
+        System.err.println("Niepoprawne hasło podane dla użytkownika: " + name); 
+        return; 
+    }
+    this.name = name;
+    this.email = email;
+    this.passhash = enhash(password);
+    this.darkmode = darkmode;
+    this.teamRoles = new HashMap<>();
+
+}
+
+public static boolean isValidEmail(String email) {
+    if (email == null) return false;
+    String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
+    Pattern pattern = Pattern.compile(emailRegex);
+    Matcher matcher = pattern.matcher(email);
+    return matcher.matches();
+}
+
+
+public static boolean isValidPassword(String password) {
+    if (password == null) return false;
+    // Hasło musi mieć co najmniej 8 znaków, zawierać jedną dużą literę, jedną cyfrę i jeden znak specjalny
+    String passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
+    Pattern pattern = Pattern.compile(passwordRegex);
+    Matcher matcher = pattern.matcher(password);
+    return matcher.matches();
+}
+
+
+public void exportToFile(String filename) {
+    File file = new File(filename);
+    File parentDir = file.getParentFile();
+    if (parentDir != null && !parentDir.exists()) {
+        parentDir.mkdirs(); 
+    }
+    try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+        oos.writeObject(this);
+    } catch (IOException e) {
+        System.err.println("Eksport użytkownika " + this.name + " do " + filename + " nie powiódł się: " + e.getMessage());
+    }
+}
+
+
+public static String enhash(String input) {
+    if (input == null) return null;
+    try {
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] hashBytes = digest.digest(input.getBytes());
+        StringBuilder hexString = new StringBuilder(hashBytes.length * 2); 
+        for (byte b : hashBytes) {
+            hexString.append(String.format("%02x", b));
+        }
+        return hexString.toString();
+    } catch (NoSuchAlgorithmException e) {
+        System.err.println("SHA-256 Algorithm not found: " + e.getMessage());
+        return null; 
+    }
+}
+
+private Map<Team, Role> getTeamRolesMap() {
+    if (this.teamRoles == null) {
+        this.teamRoles = new HashMap<>();
+    }
+    return this.teamRoles;
+}
+
+public void addTeam(Team team, Role role) {
+    getTeamRolesMap().put(team, role);
+}
+
+public void removeTeam(Team team) {
+    getTeamRolesMap().remove(team);
+}
+
+public Role getRoleInTeam(Team team) {
+    return getTeamRolesMap().get(team);
+}
+
+public Set<Team> getTeams() {
+    return getTeamRolesMap().keySet();
+}
+
+public boolean isMemberOfTeam(Team team) {
+    return getTeamRolesMap().containsKey(team);
+}
+
+@Override
+public String toString() {
+    return name != null ? name : "Użytkownik bez nazwy";
+}
+public static void main(String[] args) {
+    
+}
+}
+
 
 class Calendar {
     private StringBuilder sb;

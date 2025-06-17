@@ -107,7 +107,7 @@ private void exportICS(ActionEvent e) {
     }
 }
 
-    private void refreshProjects() {
+    void refreshProjects() {
         projectsPanel.removeAll();
         
         // Dodajemy informację o sortowaniu
