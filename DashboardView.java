@@ -10,6 +10,18 @@ public class DashboardView extends JPanel {
     private final Container container;
     private final JPanel projectsPanel;
 
+    public MainFrame getFrame() {
+        return frame;
+    }
+
+    public Container getContainer() {
+        return container;
+    }
+
+    public JPanel getProjectsPanel() {
+        return projectsPanel;
+    }
+
     public DashboardView(Container container, MainFrame frame) {
         this.container = container;
         this.frame = frame;
@@ -21,7 +33,7 @@ public class DashboardView extends JPanel {
         JLabel title = new JLabel("Twoje projekty");
         title.setFont(new Font("Arial", Font.BOLD, 24));
         header.add(title, BorderLayout.WEST);
-        
+
         JPanel rightPanel = new JPanel(new BorderLayout());
 
         //Panel sortowania
@@ -32,15 +44,15 @@ public class DashboardView extends JPanel {
         sortPanel.add(sortLabel);
 
         JComboBox<String> sortCombo = new JComboBox<>(new String[]{
-            "Nazwy (A-Z)", "Data rozpoczęcia", "Terminu", 
-            "Trudności", "Postępu", "Przewidywania", 
-            "Opóźnienia", "Koloru"
+                "Nazwy (A-Z)", "Data rozpoczęcia", "Terminu",
+                "Trudności", "Postępu", "Przewidywania",
+                "Opóźnienia", "Koloru"
         });
-        sortCombo.setSelectedIndex(Math.abs(container.sortby) - 1); 
+        sortCombo.setSelectedIndex(Math.abs(container.sortby) - 1);
         sortPanel.add(sortCombo);
 
         JCheckBox reverseCheck = new JCheckBox("Odwrotnie");
-        reverseCheck.setSelected(container.sortby <0);
+        reverseCheck.setSelected(container.sortby < 0);
         sortPanel.add(reverseCheck);
 
         JButton sortButton = new JButton("Sortuj");
@@ -85,37 +97,38 @@ public class DashboardView extends JPanel {
 
         refreshProjects();
     }
-private void exportICS(ActionEvent e) {
-    try {
-        JFileChooser fileChooser = new JFileChooser();
-        fileChooser.setDialogTitle("Zapisz plik ICS");
-        int result = fileChooser.showSaveDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
-            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
-            if (!filePath.endsWith(".ics")) {
-                filePath += ".ics";
+
+    private void exportICS(ActionEvent e) {
+        try {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Zapisz plik ICS");
+            int result = fileChooser.showSaveDialog(this);
+            if (result == JFileChooser.APPROVE_OPTION) {
+                String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+                if (!filePath.endsWith(".ics")) {
+                    filePath += ".ics";
+                }
+
+                // Generujemy ICS
+                Calendar calendar = new Calendar(container);
+                calendar.saveToFile(filePath);
+
+                JOptionPane.showMessageDialog(this, "Plik ICS zapisano jako:\n" + filePath, "Eksport zakończony", JOptionPane.INFORMATION_MESSAGE);
             }
-
-            // Generujemy ICS
-            Calendar calendar = new Calendar(container);
-            calendar.saveToFile(filePath);
-
-            JOptionPane.showMessageDialog(this, "Plik ICS zapisano jako:\n" + filePath, "Eksport zakończony", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Błąd podczas eksportu: " + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
         }
-    } catch (Exception ex) {
-        JOptionPane.showMessageDialog(this, "Błąd podczas eksportu: " + ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
     }
-}
 
     void refreshProjects() {
         projectsPanel.removeAll();
-        
+
         // Dodajemy informację o sortowaniu
         JLabel sortInfo = new JLabel(getSortDescription());
         sortInfo.setFont(new Font("Arial", Font.ITALIC, 12));
         sortInfo.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 0));
         projectsPanel.add(sortInfo);
-        
+
         for (Project project : container.projects) {
             project.calculatePredict();
             ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
@@ -130,21 +143,21 @@ private void exportICS(ActionEvent e) {
 
     private String getSortDescription() {
         String[] sortOptions = {
-            "Nazwa (A-Z)", 
-            "Data rozpoczęcia", 
-            "Termin", 
-            "Suma trudności", 
-            "Postęp", 
-            "Przewidywane zakończenie", 
-            "Opóźnienie", 
-            "Kolor"
+                "Nazwa (A-Z)",
+                "Data rozpoczęcia",
+                "Termin",
+                "Suma trudności",
+                "Postęp",
+                "Przewidywane zakończenie",
+                "Opóźnienie",
+                "Kolor"
         };
-        
+
         int absSort = Math.abs(container.sortby) - 1; // -1 bo wartości 1-8
         if (absSort < 0 || absSort >= sortOptions.length) {
             return "Sortowanie: domyślne";
         }
-        
+
         String direction = container.sortby < 0 ? "malejąco" : "rosnąco";
         return "Sortowanie: " + sortOptions[absSort] + " (" + direction + ")";
     }

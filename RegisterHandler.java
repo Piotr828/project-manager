@@ -7,6 +7,14 @@ public class RegisterHandler {
         this.mainFrame = mainFrame;
     }
 
+    public MainFrame getMainFrame() {
+        return mainFrame;
+    }
+
+    public void setMainFrame(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+    }
+
     public void handleRegister(String name, String email, String password, String confirmPassword, boolean darkMode) {
         if (name.trim().isEmpty() || email.trim().isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
             JOptionPane.showMessageDialog(mainFrame, "All fields are required.", "Registration Error", JOptionPane.ERROR_MESSAGE);

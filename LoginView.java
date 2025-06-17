@@ -9,6 +9,14 @@ public class LoginView extends JPanel {
     private JTextField emailField;
     private JPasswordField passwordField;
 
+    public MainFrame getMainFrame() {
+        return mainFrame;
+    }
+
+    public void setMainFrame(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+    }
+
     public LoginView(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         this.loginHandler = new LoginHandler(mainFrame);
@@ -46,7 +54,7 @@ public class LoginView extends JPanel {
         gbc.gridx = 1;
         gbc.gridy = 2;
         add(passwordField, gbc);
-        
+
         // Login Button
         JButton loginButton = new JButton("Login");
         loginButton.addActionListener((ActionEvent e) -> {
@@ -67,7 +75,7 @@ public class LoginView extends JPanel {
         registerLinkButton.setContentAreaFilled(false);
         registerLinkButton.setFocusPainted(false);
         registerLinkButton.addActionListener((ActionEvent e) -> mainFrame.showRegisterView());
-        
+
         gbc.gridx = 0;
         gbc.gridy = 4; // Next row
         gbc.gridwidth = 2;
@@ -75,7 +83,7 @@ public class LoginView extends JPanel {
         gbc.insets = new Insets(5, 10, 10, 10); // Smaller top inset
         add(registerLinkButton, gbc);
     }
-    
+
     public void clearFields() {
         emailField.setText("");
         passwordField.setText("");

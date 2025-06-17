@@ -8,6 +8,14 @@ public class LoginHandler {
         this.mainFrame = mainFrame;
     }
 
+    public MainFrame getMainFrame() {
+        return mainFrame;
+    }
+
+    public void setMainFrame(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+    }
+
     public void handleLogin(String email, String password) {
         if (email.trim().isEmpty() || password.trim().isEmpty()) {
             JOptionPane.showMessageDialog(mainFrame, "Email and password cannot be empty.", "Login Error", JOptionPane.ERROR_MESSAGE);

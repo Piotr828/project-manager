@@ -9,14 +9,18 @@ public class Team implements Serializable {
     private Map<User, Role> members;
     private User creator;
     private long createdDate;
-    
+
+    public void setMembers(Map<User, Role> members) {
+        this.members = members;
+    }
+
     public Team(String name, String description, User creator) {
         this.name = name;
         this.description = description;
         this.creator = creator;
         this.createdDate = System.currentTimeMillis() / (1000 * 60 * 60 * 24);
         this.members = new HashMap<>();
-        
+
         // Dodaj twórcę jako administratora
         this.members.put(creator, Role.createAdministrator());
     }

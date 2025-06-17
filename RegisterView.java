@@ -12,6 +12,14 @@ public class RegisterView extends JPanel {
     private JPasswordField confirmPasswordField;
     private JCheckBox darkModeCheckBox;
 
+    public MainFrame getMainFrame() {
+        return mainFrame;
+    }
+
+    public void setMainFrame(MainFrame mainFrame) {
+        this.mainFrame = mainFrame;
+    }
+
     public RegisterView(MainFrame mainFrame) {
         this.mainFrame = mainFrame;
         this.registerHandler = new RegisterHandler(mainFrame);
@@ -69,7 +77,7 @@ public class RegisterView extends JPanel {
         gbc.gridx = 1;
         gbc.gridy = 4;
         add(confirmPasswordField, gbc);
-        
+
         darkModeCheckBox = new JCheckBox("Enable Dark Mode");
         gbc.gridx = 0;
         gbc.gridy = 5;
@@ -101,7 +109,7 @@ public class RegisterView extends JPanel {
         loginLinkButton.setContentAreaFilled(false);
         loginLinkButton.setFocusPainted(false);
         loginLinkButton.addActionListener((ActionEvent e) -> mainFrame.showLoginView());
-        
+
         gbc.gridx = 0;
         gbc.gridy = 7;
         gbc.gridwidth = 2;
@@ -109,7 +117,7 @@ public class RegisterView extends JPanel {
         gbc.insets = new Insets(5, 10, 10, 10);
         add(loginLinkButton, gbc);
     }
-    
+
     public void clearFields() {
         nameField.setText("");
         emailField.setText("");
