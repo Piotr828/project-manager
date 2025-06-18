@@ -29,10 +29,23 @@ public class Team implements Serializable {
         members.put(user, role);
     }
     
-    public void removeMember(User user) {
-        if (!user.equals(creator)) { // Nie można usunąć twórcy
-            members.remove(user);
+    public boolean removeMember(User user) {
+        if (user.equals(creator)) {
+            return false; 
         }
+        if (members.remove(user) != null) {
+            user.removeTeam(this);
+            return true;
+        }
+        return false;
+    }
+    
+    public void disbandTeam() {
+        Set<User> membersCopy = new HashSet<>(members.keySet());
+        for (User member : membersCopy) {
+            member.removeTeam(this);
+        }
+        members.clear();
     }
     
     public void updateMemberRole(User user, Role newRole) {

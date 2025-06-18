@@ -1,14 +1,14 @@
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.List;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class DashboardView extends JPanel {
     private final MainFrame frame;
-    private final Container container;
+    public final Container container;
     private final JPanel projectsPanel;
 
     public DashboardView(Container container, MainFrame frame) {
@@ -235,4 +235,5 @@ public class DashboardView extends JPanel {
         ProjectForm form = new ProjectForm(container, this::refreshProjects);
         form.setVisible(true);
     }
+    
 }

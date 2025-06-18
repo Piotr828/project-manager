@@ -10,9 +10,12 @@ import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import javax.swing.plaf.basic.BasicProgressBarUI;
 
+
 public class ProjectCard extends JPanel {
 
+    private final Project project;
     public ProjectCard(Project project, Runnable onClick) {
+        this.project = project;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBackground(Color.WHITE);
         setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -116,7 +119,42 @@ public class ProjectCard extends JPanel {
             c.addMouseListener(clickHandler);
         }
         this.addMouseListener(clickHandler);
+        setupContextMenu();
     }
+
+    private void setupContextMenu() {
+        JPopupMenu contextMenu = new JPopupMenu();
+        
+        JMenuItem deleteItem = new JMenuItem("Usuń projekt");
+        deleteItem.addActionListener(e -> {
+            int response = JOptionPane.showConfirmDialog(
+                ProjectCard.this,
+                "Czy na pewno chcesz usunąć projekt '" + project.name + "'?",
+                "Potwierdzenie usunięcia",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.WARNING_MESSAGE
+            );
+            
+            if (response == JOptionPane.YES_OPTION) {
+                Container container = ((DashboardView) SwingUtilities.getAncestorOfClass(
+                    DashboardView.class, ProjectCard.this)).container;
+                container.removeProject(project);
+                Main.saveProjects(container);
+                SwingUtilities.invokeLater(() -> {
+                    JPanel parent = (JPanel) getParent();
+                    if (parent != null) {
+                        parent.remove(ProjectCard.this);
+                        parent.revalidate();
+                        parent.repaint();
+                    }
+                });
+            }
+        });
+        
+        contextMenu.add(deleteItem);
+        setComponentPopupMenu(contextMenu);
+    }
+    
 
     private void updateWidth() {
         if (getParent() != null) {
