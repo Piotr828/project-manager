@@ -1,0 +1,596 @@
+diff --git a/AuthManager.java b/AuthManager.java
+index 4ddfbeb..24a8f91 100644
+--- a/AuthManager.java
++++ b/AuthManager.java
+@@ -50,7 +50,7 @@ public class AuthManager {
+         // Sanitize email to use as filename, or use a dedicated user ID
+         String filenameBase = user.email.replaceAll("[^a-zA-Z0-9.-]", "_");
+         String filename = USERS_DIR + filenameBase + USER_FILE_SUFFIX;
+-        
++
+         try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+             oos.writeObject(user);
+             LOGGER.info("Saved user: " + user.name + " to " + filename);
+@@ -75,9 +75,7 @@ public class AuthManager {
+     public static synchronized boolean login(String email, String password) {
+         if (email == null || password == null) return false;
+         loadUsers(); // Refresh users list from files in case of external changes / multi-instance
+-        Optional<User> userOpt = users.stream()
+-                                      .filter(u -> u.email != null && u.email.equals(email))
+-                                      .findFirst();
++        Optional<User> userOpt = users.stream().filter(u -> u.email != null && u.email.equals(email)).findFirst();
+         if (userOpt.isPresent()) {
+             User user = userOpt.get();
+             String hashedPassword = User.enhash(password);
+diff --git a/MainFrame.java b/MainFrame.java
+index 55b50d7..741c466 100644
+--- a/MainFrame.java
++++ b/MainFrame.java
+@@ -3,145 +3,145 @@ import java.awt.event.ActionEvent;
+ import javax.swing.*;
+ 
+ public class MainFrame extends JFrame {
+-private final Container container;
+-private CardLayout cardLayout;
+-private JPanel mainPanel;
+-private DashboardView dashboardView;
+-private LoginView loginView;
+-private RegisterView registerView;
+-
+-private JMenuItem teamsItem;
+-private JMenuItem logoutItem;
+-private JMenu fileMenu;
++    private final Container container;
++    private CardLayout cardLayout;
++    private JPanel mainPanel;
++    private DashboardView dashboardView;
++    private LoginView loginView;
++    private RegisterView registerView;
++
++    private JMenuItem teamsItem;
++    private JMenuItem logoutItem;
++    private JMenu fileMenu;
++
++    public Container getContainer() {
++        return container;
++    }
+ 
+-public Container getContainer() {
+-    return container;
+-}
++    public MainFrame(Container container) {
++        this.container = container;
++        setTitle("Project Manager");
++        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
++        setSize(1000, 700);
++        setLocationRelativeTo(null);
+ 
+-public MainFrame(Container container) {
+-    this.container = container;
+-    setTitle("Project Manager");
+-    setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+-    setSize(1000, 700);
+-    setLocationRelativeTo(null);
++        setupMenuBar();
+ 
+-    setupMenuBar();
++        cardLayout = new CardLayout();
++        mainPanel = new JPanel(cardLayout);
+ 
+-    cardLayout = new CardLayout();
+-    mainPanel = new JPanel(cardLayout);
++        loginView = new LoginView(this);
++        registerView = new RegisterView(this);
+ 
+-    loginView = new LoginView(this);
+-    registerView = new RegisterView(this);
+ 
++        mainPanel.add(loginView, "login");
++        mainPanel.add(registerView, "register");
+ 
+-    mainPanel.add(loginView, "login");
+-    mainPanel.add(registerView, "register");
++        add(mainPanel);
+ 
+-    add(mainPanel);
++        DashboardView dashboard = new DashboardView(container, this);
++        mainPanel.add(dashboard, "dashboard");
++        if (AuthManager.getActiveUser() != null) {
++            showDashboard();
++        } else {
++            showLoginView();
++        }
++        updateLoginStatus();
++        add(mainPanel);
++        setVisible(true);
++    }
+ 
+-    DashboardView dashboard = new DashboardView(container, this);
+-    mainPanel.add(dashboard, "dashboard");
+-    if (AuthManager.getActiveUser() != null) {
+-        showDashboard();
+-    } else {
+-        showLoginView();
++    private void setupMenuBar() {
++        JMenuBar menuBar = new JMenuBar();
++
++        fileMenu = new JMenu("File");
++        logoutItem = new JMenuItem("Logout");
++        logoutItem.addActionListener((ActionEvent e) -> {
++            AuthManager.logout();
++            showLoginView();
++            updateLoginStatus();
++        });
++        fileMenu.add(logoutItem);
++        menuBar.add(fileMenu);
++
++        JMenu settingsMenu = new JMenu("Ustawienia");
++        JMenuItem teamsItem = new JMenuItem("Zarządzanie zespołami");
++        teamsItem.addActionListener(e -> showTeamSettings());
++        settingsMenu.add(teamsItem);
++
++        menuBar.add(settingsMenu);
++        setJMenuBar(menuBar);
+     }
+-    updateLoginStatus();
+-    add(mainPanel);
+-    setVisible(true);
+-}
+-
+-private void setupMenuBar() {
+-    JMenuBar menuBar = new JMenuBar();
+-
+-    fileMenu = new JMenu("File");
+-    logoutItem = new JMenuItem("Logout");
+-    logoutItem.addActionListener((ActionEvent e) -> {
+-        AuthManager.logout();
+-        showLoginView();
+-        updateLoginStatus();
+-    });
+-    fileMenu.add(logoutItem);
+-    menuBar.add(fileMenu);
+ 
+-    JMenu settingsMenu = new JMenu("Ustawienia");
+-    JMenuItem teamsItem = new JMenuItem("Zarządzanie zespołami");
+-    teamsItem.addActionListener(e -> showTeamSettings());
+-    settingsMenu.add(teamsItem);
++    public void updateLoginStatus() {
++        boolean isLoggedIn = AuthManager.getActiveUser() != null;
+ 
+-    menuBar.add(settingsMenu);
+-    setJMenuBar(menuBar);
+-}
++        if (teamsItem != null) {
++            teamsItem.setEnabled(isLoggedIn);
++        }
++        if (logoutItem != null) {
++            logoutItem.setEnabled(isLoggedIn);
++        }
++        if (fileMenu != null) {
++            fileMenu.setEnabled(isLoggedIn);
++        }
+ 
+-public void updateLoginStatus() {
+-    boolean isLoggedIn = AuthManager.getActiveUser() != null;
+ 
+-    if (teamsItem != null) {
+-        teamsItem.setEnabled(isLoggedIn);
+-    }
+-    if (logoutItem != null) {
+-        logoutItem.setEnabled(isLoggedIn);
++        if (isLoggedIn && dashboardView != null) {
++            dashboardView.refreshProjects();
++        }
+     }
+-    if (fileMenu != null) {
+-        fileMenu.setEnabled(isLoggedIn);
+-    }
+-
+ 
+-    if (isLoggedIn && dashboardView != null) {
+-        dashboardView.refreshProjects();
++    private void showTeamSettings() {
++        User currentUser = AuthManager.getActiveUser();
++        if (currentUser != null) {
++            SettingsWindow settings = new SettingsWindow(currentUser, container);
++            settings.setVisible(true);
++        }
+     }
+-}
+ 
+-private void showTeamSettings() {
+-    User currentUser = AuthManager.getActiveUser();
+-    if (currentUser != null) {
+-        SettingsWindow settings = new SettingsWindow(currentUser, container);
+-        settings.setVisible(true);
++    public void showLoginView() {
++        if (loginView == null) {
++            loginView = new LoginView(this);
++            mainPanel.add(loginView, "login");
++        }
++        loginView.clearFields();
++        cardLayout.show(mainPanel, "login");
+     }
+-}
+ 
+-public void showLoginView() {
+-    if (loginView == null) {
+-        loginView = new LoginView(this);
+-        mainPanel.add(loginView, "login");
++    public void showRegisterView() {
++        if (registerView == null) {
++            registerView = new RegisterView(this);
++            mainPanel.add(registerView, "register");
++        }
++        registerView.clearFields();
++        cardLayout.show(mainPanel, "register");
+     }
+-    loginView.clearFields();
+-    cardLayout.show(mainPanel, "login");
+-}
+ 
+-public void showRegisterView() {
+-    if (registerView == null) {
+-        registerView = new RegisterView(this);
+-        mainPanel.add(registerView, "register");
+-    }
+-    registerView.clearFields();
+-    cardLayout.show(mainPanel, "register");
+-}
+-
+-public void showDashboard() {
+-    if (AuthManager.getActiveUser() == null) {
+-        showLoginView();
+-        return;
++    public void showDashboard() {
++        if (AuthManager.getActiveUser() == null) {
++            showLoginView();
++            return;
++        }
++
++        if (dashboardView == null) {
++            dashboardView = new DashboardView(container, this);
++            mainPanel.add(dashboardView, "dashboard");
++        } else {
++            dashboardView.refreshProjects();
++        }
++        cardLayout.show(mainPanel, "dashboard");
++        updateLoginStatus();
+     }
+ 
+-    if (dashboardView == null) {
+-        dashboardView = new DashboardView(container, this);
+-        mainPanel.add(dashboardView, "dashboard");
+-    } else {
+-        dashboardView.refreshProjects();
+-    }
+-    cardLayout.show(mainPanel, "dashboard");
+-    updateLoginStatus();
+-}
+-
+-public void showProjectDetail(Project project) {
+-    if (AuthManager.getActiveUser() == null) {
+-        showLoginView();
+-        return;
++    public void showProjectDetail(Project project) {
++        if (AuthManager.getActiveUser() == null) {
++            showLoginView();
++            return;
++        }
++        ProjectDetailView detailView = new ProjectDetailView(project, this, container);
++        String cardName = "projectDetail_" + project.name.replaceAll("\\s+", "");
++        mainPanel.add(detailView, cardName);
++        cardLayout.show(mainPanel, cardName);
+     }
+-    ProjectDetailView detailView = new ProjectDetailView(project, this, container);
+-    String cardName = "projectDetail_" + project.name.replaceAll("\\s+", "");
+-    mainPanel.add(detailView, cardName);
+-    cardLayout.show(mainPanel, cardName);
+-}
+ }
+\ No newline at end of file
+diff --git a/ProjectForm.java b/ProjectForm.java
+index a6a9419..d32a879 100644
+--- a/ProjectForm.java
++++ b/ProjectForm.java
+@@ -4,7 +4,7 @@ import javax.swing.*;
+ 
+ public class ProjectForm extends JDialog {
+     public ProjectForm(Container container, Runnable onSuccess) {
+-        this (null, container, p ->{
++        this(null, container, p -> {
+             container.addProject(p);
+             onSuccess.run();
+         });
+@@ -40,7 +40,7 @@ public class ProjectForm extends JDialog {
+ 
+         // === Nazwa ===
+         JTextField nameField = new JTextField();
+-        if (project !=null){
++        if (project != null) {
+             nameField.setText(project.name);
+         }
+         nameField.setFont(new Font("Arial", Font.PLAIN, 18));
+@@ -73,8 +73,7 @@ public class ProjectForm extends JDialog {
+         gbc.weighty = 0;
+ 
+         // === Data rozpoczęcia ===
+-        Date startDate = project == null ? new Date():
+-            new Date(project.start * 86400L * 1000);
++        Date startDate = project == null ? new Date() : new Date(project.start * 86400L * 1000);
+         JSpinner startSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
+         startSpinner.setEditor(new JSpinner.DateEditor(startSpinner, "dd.MM.yyyy"));
+         startSpinner.setPreferredSize(new Dimension(200, 40));
+@@ -85,8 +84,7 @@ public class ProjectForm extends JDialog {
+         panel.add(startSpinner, gbc);
+ 
+         // === Termin końcowy ===
+-        Date deadlineDate = project == null ? new Date():
+-            new Date(project.deadline * 86400L * 1000);
++        Date deadlineDate = project == null ? new Date() : new Date(project.deadline * 86400L * 1000);
+         JSpinner deadlineSpinner = new JSpinner(new SpinnerDateModel(new Date(), null, null, java.util.Calendar.DAY_OF_MONTH));
+         deadlineSpinner.setEditor(new JSpinner.DateEditor(deadlineSpinner, "dd.MM.yyyy"));
+         deadlineSpinner.setPreferredSize(new Dimension(200, 40));
+@@ -97,9 +95,8 @@ public class ProjectForm extends JDialog {
+         panel.add(deadlineSpinner, gbc);
+ 
+         // === Wybór koloru ===
+-        
+-        Color initialColor = project == null ? Color.WHITE : 
+-            new Color(project.red, project.green, project.blue);
++
++        Color initialColor = project == null ? Color.WHITE : new Color(project.red, project.green, project.blue);
+         Color[] selectedColor = {initialColor};
+ 
+ 
+@@ -140,22 +137,14 @@ public class ProjectForm extends JDialog {
+ 
+             if (project == null) {
+                 // Tworzenie nowego projektu
+-                Project newProject = new Project(
+-                    name,
+-                    descArea.getText(),
+-                    ((Date)startSpinner.getValue()).toInstant().getEpochSecond() / 86400,
+-                    ((Date)deadlineSpinner.getValue()).toInstant().getEpochSecond() / 86400,
+-                    selectedColor[0].getRed(),
+-                    selectedColor[0].getGreen(),
+-                    selectedColor[0].getBlue()
+-                );
++                Project newProject = new Project(name, descArea.getText(), ((Date) startSpinner.getValue()).toInstant().getEpochSecond() / 86400, ((Date) deadlineSpinner.getValue()).toInstant().getEpochSecond() / 86400, selectedColor[0].getRed(), selectedColor[0].getGreen(), selectedColor[0].getBlue());
+                 onSuccess.accept(newProject);
+             } else {
+                 // Edycja istniejącego projektu
+                 project.name = name;
+                 project.descript = descArea.getText();
+-                project.start = ((Date)startSpinner.getValue()).toInstant().getEpochSecond() / 86400;
+-                project.deadline = ((Date)deadlineSpinner.getValue()).toInstant().getEpochSecond() / 86400;
++                project.start = ((Date) startSpinner.getValue()).toInstant().getEpochSecond() / 86400;
++                project.deadline = ((Date) deadlineSpinner.getValue()).toInstant().getEpochSecond() / 86400;
+                 project.red = selectedColor[0].getRed();
+                 project.green = selectedColor[0].getGreen();
+                 project.blue = selectedColor[0].getBlue();
+diff --git a/RegisterView.java b/RegisterView.java
+index ba7248c..4b8ed04 100644
+--- a/RegisterView.java
++++ b/RegisterView.java
+@@ -87,13 +87,7 @@ public class RegisterView extends JPanel {
+ 
+         JButton registerButton = new JButton("Register");
+         registerButton.addActionListener((ActionEvent e) -> {
+-            registerHandler.handleRegister(
+-                    nameField.getText(),
+-                    emailField.getText(),
+-                    new String(passwordField.getPassword()),
+-                    new String(confirmPasswordField.getPassword()),
+-                    darkModeCheckBox.isSelected()
+-            );
++            registerHandler.handleRegister(nameField.getText(), emailField.getText(), new String(passwordField.getPassword()), new String(confirmPasswordField.getPassword()), darkModeCheckBox.isSelected());
+         });
+         gbc.gridx = 0;
+         gbc.gridy = 6;
+diff --git a/SettingsWindow.java b/SettingsWindow.java
+index 20ce79b..205ca82 100644
+--- a/SettingsWindow.java
++++ b/SettingsWindow.java
+@@ -169,8 +169,7 @@ public class SettingsWindow extends JDialog {
+         membersPanel.add(membersScrollPane, BorderLayout.CENTER);
+ 
+         // Przyciski zarządzania członkami
+-        if (selectedTeam.isCreator(currentUser) ||
+-                selectedTeam.getUserRole(currentUser).getPerm() >= 64) {
++        if (selectedTeam.isCreator(currentUser) || selectedTeam.getUserRole(currentUser).getPerm() >= 64) {
+ 
+             JPanel buttonPanel = new JPanel(new FlowLayout());
+ 
+@@ -207,27 +206,11 @@ public class SettingsWindow extends JDialog {
+             return;
+         }
+ 
+-        User selectedUser = (User) JOptionPane.showInputDialog(
+-                this,
+-                "Wybierz użytkownika do dodania:",
+-                "Dodaj członka",
+-                JOptionPane.PLAIN_MESSAGE,
+-                null,
+-                availableUsers.toArray(),
+-                availableUsers.get(0)
+-        );
++        User selectedUser = (User) JOptionPane.showInputDialog(this, "Wybierz użytkownika do dodania:", "Dodaj członka", JOptionPane.PLAIN_MESSAGE, null, availableUsers.toArray(), availableUsers.get(0));
+ 
+         if (selectedUser != null) {
+             Role[] roles = {Role.createViewer(), Role.createMember(), Role.createAdministrator()};
+-            Role selectedRole = (Role) JOptionPane.showInputDialog(
+-                    this,
+-                    "Wybierz rolę dla użytkownika:",
+-                    "Wybierz rolę",
+-                    JOptionPane.PLAIN_MESSAGE,
+-                    null,
+-                    roles,
+-                    roles[1]
+-            );
++            Role selectedRole = (Role) JOptionPane.showInputDialog(this, "Wybierz rolę dla użytkownika:", "Wybierz rolę", JOptionPane.PLAIN_MESSAGE, null, roles, roles[1]);
+ 
+             if (selectedRole != null) {
+                 selectedTeam.addMember(selectedUser, selectedRole);
+@@ -248,12 +231,7 @@ public class SettingsWindow extends JDialog {
+                     return;
+                 }
+ 
+-                int confirm = JOptionPane.showConfirmDialog(
+-                        this,
+-                        "Czy na pewno chcesz usunąć użytkownika " + userToRemove.name + " z zespołu?",
+-                        "Potwierdź usunięcie",
+-                        JOptionPane.YES_NO_OPTION
+-                );
++                int confirm = JOptionPane.showConfirmDialog(this, "Czy na pewno chcesz usunąć użytkownika " + userToRemove.name + " z zespołu?", "Potwierdź usunięcie", JOptionPane.YES_NO_OPTION);
+ 
+                 if (confirm == JOptionPane.YES_OPTION) {
+                     selectedTeam.removeMember(userToRemove);
+@@ -279,15 +257,7 @@ public class SettingsWindow extends JDialog {
+ 
+                 Role[] roles = {Role.createViewer(), Role.createMember(), Role.createAdministrator()};
+                 Role currentRole = selectedTeam.getUserRole(userToUpdate);
+-                Role newRole = (Role) JOptionPane.showInputDialog(
+-                        this,
+-                        "Wybierz nową rolę dla " + userToUpdate.name + ":",
+-                        "Zmień rolę",
+-                        JOptionPane.PLAIN_MESSAGE,
+-                        null,
+-                        roles,
+-                        currentRole
+-                );
++                Role newRole = (Role) JOptionPane.showInputDialog(this, "Wybierz nową rolę dla " + userToUpdate.name + ":", "Zmień rolę", JOptionPane.PLAIN_MESSAGE, null, roles, currentRole);
+ 
+                 if (newRole != null && !newRole.equals(currentRole)) {
+                     selectedTeam.updateMemberRole(userToUpdate, newRole);
+diff --git a/TaskItem.java b/TaskItem.java
+index 09cddc0..fcc6d42 100644
+--- a/TaskItem.java
++++ b/TaskItem.java
+@@ -4,14 +4,11 @@ import javax.swing.*;
+ 
+ public class TaskItem extends JPanel {
+     private final Task task;
+-    
++
+     public TaskItem(Task task) {
+         this.task = task;
+         setLayout(new BorderLayout());
+-        setBorder(BorderFactory.createCompoundBorder(
+-            BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+-            BorderFactory.createEmptyBorder(5, 10, 5, 10)
+-        ));
++        setBorder(BorderFactory.createCompoundBorder(BorderFactory.createLineBorder(Color.LIGHT_GRAY), BorderFactory.createEmptyBorder(5, 10, 5, 10)));
+         setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+ 
+         // Checkbox z nazwą zadania po lewej
+diff --git a/Team.java b/Team.java
+index 6407f39..a78bcfb 100644
+--- a/Team.java
++++ b/Team.java
+@@ -3,7 +3,7 @@ import java.util.*;
+ 
+ public class Team implements Serializable {
+     private static final long serialVersionUID = 1L;
+-    
++
+     private String name;
+     private String description;
+     private Map<User, Role> members;
+@@ -24,39 +24,39 @@ public class Team implements Serializable {
+         // Dodaj twórcę jako administratora
+         this.members.put(creator, Role.createAdministrator());
+     }
+-    
++
+     public void addMember(User user, Role role) {
+         members.put(user, role);
+     }
+-    
++
+     public void removeMember(User user) {
+         if (!user.equals(creator)) { // Nie można usunąć twórcy
+             members.remove(user);
+         }
+     }
+-    
++
+     public void updateMemberRole(User user, Role newRole) {
+         if (members.containsKey(user) && !user.equals(creator)) {
+             members.put(user, newRole);
+         }
+     }
+-    
++
+     public boolean isMember(User user) {
+         return members.containsKey(user);
+     }
+-    
++
+     public Role getUserRole(User user) {
+         return members.get(user);
+     }
+-    
++
+     public Set<User> getMembers() {
+         return members.keySet();
+     }
+-    
++
+     public Map<User, Role> getMembersWithRoles() {
+         return new HashMap<>(members);
+     }
+-    
++
+     public boolean isCreator(User user) {
+         return creator.equals(user);
+     }
+@@ -64,32 +64,32 @@ public class Team implements Serializable {
+     public String getName() {
+         return name;
+     }
+-    
++
+     public void setName(String name) {
+         this.name = name;
+     }
+-    
++
+     public String getDescription() {
+         return description;
+     }
+-    
++
+     public void setDescription(String description) {
+         this.description = description;
+     }
+-    
++
+     public User getCreator() {
+         return creator;
+     }
+-    
++
+     public long getCreatedDate() {
+         return createdDate;
+     }
+-    
++
+     @Override
+     public String toString() {
+         return name;
+     }
+-    
++
+     @Override
+     public boolean equals(Object obj) {
+         if (this == obj) return true;
+@@ -97,7 +97,7 @@ public class Team implements Serializable {
+         Team team = (Team) obj;
+         return name.equals(team.name) && creator.equals(team.creator);
+     }
+-    
++
+     @Override
+     public int hashCode() {
+         return Objects.hash(name, creator);

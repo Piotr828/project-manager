@@ -169,6 +169,17 @@ class Container implements Serializable {
         projects.remove(project);
     }
 
+    public User findUserByEmail(String email) {
+    for (Team team : teams) {
+        for (User user : team.getMembers()) {
+            if (user.getEmail().equals(email)) {
+                return user;
+            }
+        }
+    }
+    return null;
+    }
+
     public void sortProjects() {
         Comparator<Project> comparator = null;
         boolean reverse = sortby < 0;
@@ -294,7 +305,7 @@ class User implements Serializable {
         return matcher.matches();
     }
 
-
+    public String getEmail (){return email;}
     public void exportToFile(String filename) {
         File file = new File(filename);
         File parentDir = file.getParentFile();
@@ -360,6 +371,19 @@ class User implements Serializable {
     public static void main(String[] args) {
 
     }
+    @Override
+public boolean equals(Object obj) {
+    if (this == obj) return true;
+    if (obj == null || getClass() != obj.getClass()) return false;
+    User other = (User) obj;
+    return email.equals(other.email); // lub inne unikalne pole
+}
+
+@Override
+public int hashCode() {
+    return email.hashCode();
+}
+
 }
 
 
