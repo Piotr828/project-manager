@@ -96,6 +96,30 @@ public class ProjectForm extends JDialog {
         gbc.gridy = row++;
         panel.add(deadlineSpinner, gbc);
 
+        // === Wybór zespołu ===
+        // === Wybór zespołu ===
+        gbc.gridy = row++;
+        panel.add(new JLabel("Zespół (opcjonalnie):"), gbc);
+
+        JComboBox<Team> teamCombo = new JComboBox<>();
+        teamCombo.addItem(null);
+
+        User currentUser = AuthManager.getActiveUser();
+        if (currentUser != null) {
+            for (Team team : container.getUserTeams(currentUser)) {
+                teamCombo.addItem(team);
+            }
+        }
+
+        if (project != null && project.getTeam() != null) {
+            teamCombo.setSelectedItem(project.getTeam());
+        }
+
+        gbc.gridy = row++;
+        panel.add(teamCombo, gbc);
+
+
+
         // === Wybór koloru ===
         
         Color initialColor = project == null ? Color.WHITE : 
@@ -137,9 +161,8 @@ public class ProjectForm extends JDialog {
             } else {
                 nameField.setBorder(UIManager.getLookAndFeel().getDefaults().getBorder("TextField.border"));
             }
-
+            Team selectedTeam = (Team) teamCombo.getSelectedItem();
             if (project == null) {
-                // Tworzenie nowego projektu
                 Project newProject = new Project(
                     name,
                     descArea.getText(),
@@ -149,9 +172,9 @@ public class ProjectForm extends JDialog {
                     selectedColor[0].getGreen(),
                     selectedColor[0].getBlue()
                 );
+                newProject.setTeam(selectedTeam);
                 onSuccess.accept(newProject);
             } else {
-                // Edycja istniejącego projektu
                 project.name = name;
                 project.descript = descArea.getText();
                 project.start = ((Date)startSpinner.getValue()).toInstant().getEpochSecond() / 86400;
@@ -159,9 +182,11 @@ public class ProjectForm extends JDialog {
                 project.red = selectedColor[0].getRed();
                 project.green = selectedColor[0].getGreen();
                 project.blue = selectedColor[0].getBlue();
+                project.setTeam(selectedTeam);
                 project.calculatePredict();
                 onSuccess.accept(project);
             }
+
 
             if (container != null) {
                 Main.saveProjects(container);

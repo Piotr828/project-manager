@@ -5,6 +5,8 @@ import java.io.IOException;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.util.ArrayList;
+import java.util.Comparator;
 
 public class DashboardView extends JPanel {
     private final MainFrame frame;
@@ -74,10 +76,11 @@ public class DashboardView extends JPanel {
 
             JButton sortButton = new JButton("Sortuj");
             sortButton.addActionListener(e -> {
-                int selected = sortCombo.getSelectedIndex() + 1;
-                container.sortby = (byte) (reverseCheck.isSelected() ? -(selected + 1) : (selected + 1));
+                int selected = sortCombo.getSelectedIndex() + 1;  // wartości od 1 do 8
+                container.sortby = (byte) (reverseCheck.isSelected() ? -selected : selected);  // ✅ OK
                 refreshProjects();
             });
+
             add(sortButton);
         }
     }
@@ -174,25 +177,65 @@ public class DashboardView extends JPanel {
         }
     }
 
-    void refreshProjects() {
-        projectsPanel.removeAll();
+void refreshProjects() {
+    projectsPanel.removeAll();
+    container.sortProjects();
+    User currentUser = AuthManager.getActiveUser();
+    List<Project> ownTeamProjects = new ArrayList<>();
+    List<Project> publicProjects = new ArrayList<>();
 
-        JLabel sortInfo = new JLabel(getSortDescription());
-        sortInfo.setFont(new Font("Arial", Font.ITALIC, 12));
-        sortInfo.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 0));
-        projectsPanel.add(sortInfo);
+    for (Project project : container.projects) {
+        Team team = project.getTeam();
+        if (team != null && team.isMember(currentUser)) {
+            ownTeamProjects.add(project);
+        } else if (team == null) {
+            publicProjects.add(project);
+        }
+    }
 
-        for (Project project : container.projects) {
+    Comparator<Project> comparator = container.getProjectComparator();
+    if (comparator != null) {
+        ownTeamProjects.sort(comparator);
+        publicProjects.sort(comparator);
+    }
+
+    // Pasek oddzielający sekcje
+    projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+    if (!ownTeamProjects.isEmpty()) {
+        for (Project project : ownTeamProjects) {
             project.calculatePredict();
             ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
             card.setAlignmentX(Component.LEFT_ALIGNMENT);
             projectsPanel.add(card);
             projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
         }
-
-        revalidate();
-        repaint();
     }
+
+    if (!ownTeamProjects.isEmpty() && !publicProjects.isEmpty()) {
+        // separator (np. <hr>)
+        JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+        separator.setForeground(new Color(180, 180, 180));
+        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+        projectsPanel.add(separator);
+        projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+    }
+
+    if (!publicProjects.isEmpty()) {
+        for (Project project : publicProjects) {
+            project.calculatePredict();
+            ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
+            card.setAlignmentX(Component.LEFT_ALIGNMENT);
+            projectsPanel.add(card);
+            projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        }
+    }
+
+    revalidate();
+    repaint();
+}
+
+
 
     private String getSortDescription() {
         String[] sortOptions = {

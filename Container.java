@@ -7,6 +7,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.Comparator;
 
 
 class Task implements Serializable {
@@ -180,62 +181,37 @@ class Container implements Serializable {
     return null;
     }
 
-    public void sortProjects() {
-        Comparator<Project> comparator = null;
-        boolean reverse = sortby < 0;
-        int key = Math.abs(sortby);
 
-        switch (key) {
-            case 0:
-                comparator = Comparator.comparing(p -> p.name.toLowerCase());
-                break;
-            case 1:
-                comparator = Comparator.comparingLong(p -> p.start);
-                break;
-            case 2:
-                comparator = Comparator.comparingLong(p -> p.deadline);
-                break;
-            case 3:
-                comparator = Comparator.comparingInt(p ->
-                        p.tasks.stream().mapToInt(t -> t.diffic).sum());
-                break;
-            case 4:
-                comparator = Comparator.comparingInt(p -> p.progress);
-                break;
-            case 5:
-                comparator = Comparator.comparingLong(p -> p.predict);
-                break;
-            case 6:
-                comparator = Comparator.comparingInt(p -> p.delay);
-                break;
-            case 7:
-                comparator = Comparator
-                        .comparingInt((Project p) -> p.red)
-                        .thenComparingInt(p -> p.green)
-                        .thenComparingInt(p -> p.blue);
-                break;
-            default:
-                return;
-        }
-
-        if (reverse && comparator != null) {
-            comparator = comparator.reversed();
-        }
-
+ public void sortProjects() {
+    Comparator<Project> comparator = getProjectComparator();
+    if (comparator != null) {
         projects.sort(comparator);
-
-
-        if (comparator != null) {
-            if (reverse) {
-                projects.sort(comparator.reversed());
-            } else {
-                projects.sort(comparator);
-            }
-        }
-
     }
 }
 
+
+public Comparator<Project> getProjectComparator() {
+    boolean reverse = sortby < 0;
+    int key = Math.abs(sortby);
+
+    Comparator<Project> comparator = switch (key) {
+        case 1 -> Comparator.comparing(p -> p.name.toLowerCase());
+        case 2 -> Comparator.comparingLong(p -> p.start);
+        case 3 -> Comparator.comparingLong(p -> p.deadline);
+        case 4 -> Comparator.comparingInt(p -> p.tasks.stream().mapToInt(t -> t.diffic).sum());
+        case 5 -> Comparator.comparingInt(Project::progress);
+        case 6 -> Comparator.comparingLong(p -> p.predict);
+        case 7 -> Comparator.comparingInt(p -> p.delay);
+        case 8 -> Comparator
+                    .comparingInt((Project p) -> p.red)
+                    .thenComparingInt(p -> p.green)
+                    .thenComparingInt(p -> p.blue);
+        default -> null;
+    };
+
+    return (comparator != null && reverse) ? comparator.reversed() : comparator;
+}
+}
 
 class User implements Serializable {
     private static final long serialVersionUID = 1L;
