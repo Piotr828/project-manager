@@ -2,7 +2,7 @@ import java.io.Serializable;
 import java.util.*;
 
 public class Team implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     
     private String name;
     private String description;

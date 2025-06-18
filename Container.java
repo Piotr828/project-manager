@@ -120,9 +120,28 @@ class Project implements Serializable {
 
 
 class Container implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     public byte sortby;
     List<Project> projects = new ArrayList<>();
+    List<Team> teams = new ArrayList<>();
+
+    public void addTeam(Team team) {
+        teams.add(team);
+    }
+    
+    public void removeTeam(Team team) {
+        teams.remove(team);
+    }
+    
+    public List<Team> getTeams() {
+        return new ArrayList<>(teams);
+    }
+    
+    public List<Team> getUserTeams(User user) {
+        return teams.stream()
+                   .filter(team -> team.isMember(user))
+                   .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+    }
 
     public void addProject(Project project) {
         projects.add(project);

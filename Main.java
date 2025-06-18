@@ -20,6 +20,9 @@ public class Main {
                 container=initSampleData(); // Inicjalizacja z przykładowymi danymi
             }
             ImageIcon icon = new ImageIcon("Icon.png");
+            // User testUser = new User("Test", "test@test.com", "123", false);
+            // SettingsWindow settings = new SettingsWindow(testUser, container);
+            // settings.setVisible(true);
 
             // Poprawka: deklarujemy zmienną frame
             MainFrame frame = new MainFrame(container);
@@ -27,13 +30,21 @@ public class Main {
         });
     }
 
+
     private static Container loadProjects() {
         File file = new File(SAVE_FILE);
         if (!file.exists()){
             return null;
         }
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))){
-            return (Container) ois.readObject();
+            Container container = (Container) ois.readObject();
+            System.out.println("WCZYTANO: " + container.projects.size() + " projektów i " + 
+                            container.getTeams().size() + " zespołów");
+            
+            for (Team team : container.getTeams()) {
+                System.out.println("  - Zespół: " + team.getName());
+            }
+            return container;
         } catch(IOException|ClassNotFoundException e){
             System.err.println("Nastąpił problem z otworzeniem pliku: "+ e.getMessage());
             return null;
@@ -66,6 +77,11 @@ public class Main {
             }
             try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
                 oos.writeObject(container);
+                System.out.println("Zapisano: " + container.projects.size() + " projektów i " + 
+                    container.getTeams().size() + " zespołów");
+                for (Team team : container.getTeams()) {
+                    System.out.println("  - Zespół: " + team.getName());
+                }
             }
         } catch (IOException e) {
             JOptionPane.showMessageDialog(null, 

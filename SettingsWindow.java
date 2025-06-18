@@ -23,7 +23,8 @@ public class SettingsWindow extends JDialog {
     public SettingsWindow(User currentUser, Container container) {
         this.currentUser = currentUser;
         this.container = container;
-        this.teams = new ArrayList<>();
+        this.teams = container.getTeams();
+        System.out.println("DEBUG: SettingsWindow - liczba zespołów w kontenerze: " + container.getTeams().size());
         this.allUsers = new ArrayList<>();
 
         // Dodaj przykładowych użytkowników (w prawdziwej aplikacji pobierz z bazy danych)
@@ -93,18 +94,18 @@ public class SettingsWindow extends JDialog {
 
             Team newTeam = new Team(teamName.trim(), teamDesc.trim(), currentUser);
             teams.add(newTeam);
-            currentUser.addTeam(newTeam, Role.createAdministrator());
+            container.addTeam(newTeam);
+            Main.saveProjects(container); 
+            System.out.println("DEBUG: Wywołano saveProjects z createNewTeam");
             refreshTeamList();
-            teamList.setSelectedValue(newTeam, true);
         }
     }
 
     private void refreshTeamList() {
         teamListModel.clear();
+        teams = container.getTeams();
         for (Team team : teams) {
-            if (team.isMember(currentUser)) {
-                teamListModel.addElement(team);
-            }
+            teamListModel.addElement(team);
         }
     }
 
@@ -232,6 +233,7 @@ public class SettingsWindow extends JDialog {
             if (selectedRole != null) {
                 selectedTeam.addMember(selectedUser, selectedRole);
                 selectedUser.addTeam(selectedTeam, selectedRole);
+                Main.saveProjects(container);
                 updateTeamDetailsPanel();
             }
         }
@@ -258,6 +260,7 @@ public class SettingsWindow extends JDialog {
                 if (confirm == JOptionPane.YES_OPTION) {
                     selectedTeam.removeMember(userToRemove);
                     userToRemove.removeTeam(selectedTeam);
+                    Main.saveProjects(container);
                     updateTeamDetailsPanel();
                 }
             }
@@ -292,6 +295,7 @@ public class SettingsWindow extends JDialog {
                 if (newRole != null && !newRole.equals(currentRole)) {
                     selectedTeam.updateMemberRole(userToUpdate, newRole);
                     userToUpdate.addTeam(selectedTeam, newRole);
+                    Main.saveProjects(container);
                     updateTeamDetailsPanel();
                 }
             }
