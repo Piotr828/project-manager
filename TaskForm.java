@@ -1,13 +1,12 @@
-import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
 import java.util.function.Consumer;
+import javax.swing.*;
 
 public class TaskForm extends JDialog {
     private final Container container;
     private final Project project;
 
-    public TaskForm(Project project,Container container,Consumer<Task> onSuccess) {
+    public TaskForm(Project project,Container container,Consumer<Task> onSuccess, Consumer<Task> onDelete) {
         this.project=project;
         this.container=container;
 
@@ -27,6 +26,9 @@ public class TaskForm extends JDialog {
         panel.add(nameField);
         panel.add(new JLabel("Trudność (1-10):"));
         panel.add(difficultySpinner);
+
+        // Panel przycisków
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         
         // Przyciski
         JButton saveButton = new JButton("Zapisz");

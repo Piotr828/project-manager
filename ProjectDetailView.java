@@ -75,13 +75,36 @@ public class ProjectDetailView extends JPanel {
         difficultyHeader.setFont(new Font("Arial", Font.BOLD, 14));
         tasksHeader.add(difficultyHeader);
 
+        tasksHeader.add(new JLabel(""));
+
         tasksTable.add(tasksHeader);
 
         // Lista zadań
         for (Task task : project.tasks) {
+            JPanel taskRowPanel = new JPanel(new BorderLayout(10, 0));
+            taskRowPanel.setMaximumSize(new Dimension(500, 35));
+            
             TaskItem item = new TaskItem(task);
-            item.setMaximumSize(new Dimension(400, 30)); // stała szerokość
-            tasksTable.add(item);
+            taskRowPanel.add(item, BorderLayout.CENTER);
+
+            JButton deleteButton = new JButton("Usuń");
+            deleteButton.addActionListener(e -> {
+                int response = JOptionPane.showConfirmDialog(
+                    ProjectDetailView.this,
+                    "Czy na pewno chcesz usunąć zadanie '" + task.name + "'?",
+                    "Potwierdzenie usunięcia",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
+                );
+                if (response == JOptionPane.YES_OPTION) {
+                    project.removeTask(task);
+                    Main.saveProjects(container);
+                    frame.showProjectDetail(project);
+                }
+            });
+            taskRowPanel.add(deleteButton, BorderLayout.EAST);
+            
+            tasksTable.add(taskRowPanel);
             tasksTable.add(Box.createRigidArea(new Dimension(0, 5)));
         }
 
@@ -111,12 +134,16 @@ public class ProjectDetailView extends JPanel {
     }
 
     private void showAddTaskForm(Project project) {
-        TaskForm form = new TaskForm(project,container, t -> {
-            project.addTask(t);
-            // Zastąp obecny widok nową instancją
-            MainFrame frame = (MainFrame) SwingUtilities.getWindowAncestor(this);
-            frame.showProjectDetail(project);
-        });
+        TaskForm form = new TaskForm(project, container, 
+            t -> { // onSuccess
+                project.addTask(t);
+                Main.saveProjects(container);
+                MainFrame frame = (MainFrame) SwingUtilities.getWindowAncestor(this);
+                frame.showProjectDetail(project);
+            },
+            null 
+        );
         form.setVisible(true);
     }
 }
+

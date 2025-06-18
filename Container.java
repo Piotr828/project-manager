@@ -77,8 +77,17 @@ class Project implements Serializable {
         tasks.add(task);
     }
 
-    public void removeTask(Task task) {
-        tasks.remove(task);
+    public boolean removeTaskByName(String taskName) {
+        for (Task task : tasks) {
+            if (task.name.equals(taskName)) {
+                return tasks.remove(task);
+            }
+        }
+        return false;
+    }
+
+    public boolean removeTask(Task task) {
+        return tasks.remove(task);
     }
 
     public void calculatePredict() {
@@ -126,6 +135,15 @@ class Container implements Serializable {
 
     public void addProject(Project project) {
         projects.add(project);
+    }
+
+    public boolean removeProjectByName(String projectName) {
+        for (Project project : projects) {
+            if (project.name.equals(projectName)) {
+                return projects.remove(project);
+            }
+        }
+        return false;
     }
 
     public void removeProject(Project project) {
@@ -389,4 +407,5 @@ class Calendar {
     public String getICS() {
         return sb.toString();
     }
+
 }

@@ -1,10 +1,10 @@
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 
 public class SettingsWindow extends JDialog {
     private final User currentUser;
@@ -101,10 +101,8 @@ public class SettingsWindow extends JDialog {
 
     private void refreshTeamList() {
         teamListModel.clear();
-        for (Team team : teams) {
-            if (team.isMember(currentUser)) {
-                teamListModel.addElement(team);
-            }
+        for (Team team : currentUser.getTeams()) { // Zawsze pobiera aktualne dane od użytkownika
+            teamListModel.addElement(team);
         }
     }
 
@@ -186,6 +184,33 @@ public class SettingsWindow extends JDialog {
             changeRoleButton.addActionListener(e -> changeMemberRole(membersList));
             buttonPanel.add(changeRoleButton);
 
+            if (selectedTeam.isCreator(currentUser)) {
+                JButton deleteTeamButton = new JButton("Usuń zespół");
+                deleteTeamButton.setForeground(Color.RED);
+                deleteTeamButton.addActionListener(e -> {
+                    int confirm = JOptionPane.showConfirmDialog(
+                        this,
+                        "Czy na pewno chcesz usunąć zespół " + selectedTeam.getName() + "?\nSpowoduje to usunięcie go ze wszystkich projektów.",
+                        "Potwierdź usunięcie",
+                        JOptionPane.YES_NO_OPTION
+                    );
+                    
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        for(Project p : container.projects) {
+                            if (selectedTeam.equals(p.getTeam())) {
+                                p.setTeam(null);
+                            }
+                        }
+                        selectedTeam.disbandTeam();
+                        teams.remove(selectedTeam);
+                        refreshTeamList();
+                        selectedTeam = null;
+                        updateTeamDetailsPanel();
+                    }
+                });
+                buttonPanel.add(deleteTeamButton);
+            }
+
             membersPanel.add(buttonPanel, BorderLayout.SOUTH);
         }
 
@@ -237,29 +262,41 @@ public class SettingsWindow extends JDialog {
         }
     }
 
+    private User findUserByNameInSelectedTeam(String name) {
+        for (User user : selectedTeam.getMembers()) {
+            if (user.name.equals(name)) {
+                return user;
+            }
+        }
+        return null;
+    }
+
     private void removeMemberFromTeam(JList<String> membersList) {
-        int selectedIndex = membersList.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            User[] members = selectedTeam.getMembers().toArray(new User[0]);
-            if (selectedIndex < members.length) {
-                User userToRemove = members[selectedIndex];
-                if (selectedTeam.isCreator(userToRemove)) {
-                    JOptionPane.showMessageDialog(this, "Nie można usunąć twórcy zespołu.");
-                    return;
-                }
+        String selectedValue = membersList.getSelectedValue();
+        if (selectedValue != null) {
+            String username = selectedValue.substring(0, selectedValue.lastIndexOf(" ("));
+            User userToRemove = findUserByNameInSelectedTeam(username);
+            
+            if (userToRemove == null) {
+                JOptionPane.showMessageDialog(this, "Nie znaleziono użytkownika.");
+                return;
+            }
 
-                int confirm = JOptionPane.showConfirmDialog(
-                        this,
-                        "Czy na pewno chcesz usunąć użytkownika " + userToRemove.name + " z zespołu?",
-                        "Potwierdź usunięcie",
-                        JOptionPane.YES_NO_OPTION
-                );
+            if (selectedTeam.isCreator(userToRemove)) {
+                JOptionPane.showMessageDialog(this, "Nie można usunąć twórcy zespołu.");
+                return;
+            }
 
-                if (confirm == JOptionPane.YES_OPTION) {
-                    selectedTeam.removeMember(userToRemove);
-                    userToRemove.removeTeam(selectedTeam);
-                    updateTeamDetailsPanel();
-                }
+            int confirm = JOptionPane.showConfirmDialog(
+                    this,
+                    "Czy na pewno chcesz usunąć użytkownika " + userToRemove.name + " z zespołu?",
+                    "Potwierdź usunięcie",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (confirm == JOptionPane.YES_OPTION) {
+                selectedTeam.removeMember(userToRemove);
+                updateTeamDetailsPanel();
             }
         } else {
             JOptionPane.showMessageDialog(this, "Wybierz członka do usunięcia.");
@@ -267,33 +304,37 @@ public class SettingsWindow extends JDialog {
     }
 
     private void changeMemberRole(JList<String> membersList) {
-        int selectedIndex = membersList.getSelectedIndex();
-        if (selectedIndex >= 0) {
-            User[] members = selectedTeam.getMembers().toArray(new User[0]);
-            if (selectedIndex < members.length) {
-                User userToUpdate = members[selectedIndex];
-                if (selectedTeam.isCreator(userToUpdate)) {
-                    JOptionPane.showMessageDialog(this, "Nie można zmieniać roli twórcy zespołu.");
-                    return;
-                }
+        String selectedValue = membersList.getSelectedValue();
+        if (selectedValue != null) {
+            String username = selectedValue.substring(0, selectedValue.lastIndexOf(" ("));
+            User userToUpdate = findUserByNameInSelectedTeam(username);
 
-                Role[] roles = {Role.createViewer(), Role.createMember(), Role.createAdministrator()};
-                Role currentRole = selectedTeam.getUserRole(userToUpdate);
-                Role newRole = (Role) JOptionPane.showInputDialog(
-                        this,
-                        "Wybierz nową rolę dla " + userToUpdate.name + ":",
-                        "Zmień rolę",
-                        JOptionPane.PLAIN_MESSAGE,
-                        null,
-                        roles,
-                        currentRole
-                );
+            if (userToUpdate == null) {
+                JOptionPane.showMessageDialog(this, "Nie znaleziono użytkownika.");
+                return;
+            }
 
-                if (newRole != null && !newRole.equals(currentRole)) {
-                    selectedTeam.updateMemberRole(userToUpdate, newRole);
-                    userToUpdate.addTeam(selectedTeam, newRole);
-                    updateTeamDetailsPanel();
-                }
+            if (selectedTeam.isCreator(userToUpdate)) {
+                JOptionPane.showMessageDialog(this, "Nie można zmieniać roli twórcy zespołu.");
+                return;
+            }
+
+            Role[] roles = {Role.createViewer(), Role.createMember(), Role.createAdministrator()};
+            Role currentRole = selectedTeam.getUserRole(userToUpdate);
+            Role newRole = (Role) JOptionPane.showInputDialog(
+                    this,
+                    "Wybierz nową rolę dla " + userToUpdate.name + ":",
+                    "Zmień rolę",
+                    JOptionPane.PLAIN_MESSAGE,
+                    null,
+                    roles,
+                    currentRole
+            );
+
+            if (newRole != null && !newRole.equals(currentRole)) {
+                selectedTeam.updateMemberRole(userToUpdate, newRole);
+                userToUpdate.addTeam(selectedTeam, newRole); // Upewnij się, że rola jest aktualizowana w obiekcie User
+                updateTeamDetailsPanel();
             }
         } else {
             JOptionPane.showMessageDialog(this, "Wybierz członka do zmiany roli.");
