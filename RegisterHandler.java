@@ -15,34 +15,34 @@ public class RegisterHandler {
         this.mainFrame = mainFrame;
     }
 
-    public void handleRegister(String name, String email, String password, String confirmPassword, boolean darkMode) {
+    public void handleRegister(String name, String email, String password, String confirmPassword) {
         if (name.trim().isEmpty() || email.trim().isEmpty() || password.isEmpty() || confirmPassword.isEmpty()) {
-            JOptionPane.showMessageDialog(mainFrame, "All fields are required.", "Registration Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Wszystkie pola są wymagane.", "Błąd rejestracji", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (!password.equals(confirmPassword)) {
-            JOptionPane.showMessageDialog(mainFrame, "Passwords do not match.", "Registration Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Hasła są różne.", "Błąd rejestracji", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (!User.isValidEmail(email)) {
-            JOptionPane.showMessageDialog(mainFrame, "Invalid email format.", "Registration Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Błędny adres e-mail.", "Błąd rejestracji", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
         if (!User.isValidPassword(password)) {
-            JOptionPane.showMessageDialog(mainFrame, "Password does not meet criteria:\n- At least 8 characters\n- One uppercase letter\n- One digit\n- One special character", "Registration Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Hasło musi posiadać:\n- Co najmniej 8 znaków\n- Wielką literę\n- Cyfrę\n- Znak specjalny", "Błąd rejestracji", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
-        String errorMessage = AuthManager.register(name, email, password, darkMode);
+        String errorMessage = AuthManager.register(name, email, password);
 
         if (errorMessage == null) {
-            JOptionPane.showMessageDialog(mainFrame, "Registration successful! Please login.", "Registration Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Rejestracja udana! Proszę się zalogować..", "Zarejestrowano pomyślnie", JOptionPane.INFORMATION_MESSAGE);
             mainFrame.showLoginView();
         } else {
-            JOptionPane.showMessageDialog(mainFrame, "Registration failed: " + errorMessage, "Registration Failed", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Registration nieudana!: " + errorMessage, "Błąd rejestracji", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

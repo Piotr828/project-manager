@@ -10,7 +10,6 @@ public class RegisterView extends JPanel {
     private JTextField emailField;
     private JPasswordField passwordField;
     private JPasswordField confirmPasswordField;
-    private JCheckBox darkModeCheckBox;
 
     public MainFrame getMainFrame() {
         return mainFrame;
@@ -29,7 +28,7 @@ public class RegisterView extends JPanel {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel titleLabel = new JLabel("Register New Account");
+        JLabel titleLabel = new JLabel("Stwórz konto");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridx = 0;
@@ -37,7 +36,7 @@ public class RegisterView extends JPanel {
         gbc.gridwidth = 2;
         add(titleLabel, gbc);
 
-        JLabel nameLabel = new JLabel("Full Name:");
+        JLabel nameLabel = new JLabel("Imię:");
         gbc.gridx = 0;
         gbc.gridy = 1;
         gbc.gridwidth = 1;
@@ -58,7 +57,7 @@ public class RegisterView extends JPanel {
         gbc.gridy = 2;
         add(emailField, gbc);
 
-        JLabel passwordLabel = new JLabel("Password:");
+        JLabel passwordLabel = new JLabel("Hasło:");
         gbc.gridx = 0;
         gbc.gridy = 3;
         add(passwordLabel, gbc);
@@ -68,7 +67,7 @@ public class RegisterView extends JPanel {
         gbc.gridy = 3;
         add(passwordField, gbc);
 
-        JLabel confirmPasswordLabel = new JLabel("Confirm Password:");
+        JLabel confirmPasswordLabel = new JLabel("Powtórz hasło:");
         gbc.gridx = 0;
         gbc.gridy = 4;
         add(confirmPasswordLabel, gbc);
@@ -78,21 +77,13 @@ public class RegisterView extends JPanel {
         gbc.gridy = 4;
         add(confirmPasswordField, gbc);
 
-        darkModeCheckBox = new JCheckBox("Enable Dark Mode");
-        gbc.gridx = 0;
-        gbc.gridy = 5;
-        gbc.gridwidth = 2;
-        gbc.anchor = GridBagConstraints.WEST;
-        add(darkModeCheckBox, gbc);
-
-        JButton registerButton = new JButton("Register");
+        JButton registerButton = new JButton("Zarejestruj");
         registerButton.addActionListener((ActionEvent e) -> {
             registerHandler.handleRegister(
-                    nameField.getText(),
-                    emailField.getText(),
-                    new String(passwordField.getPassword()),
-                    new String(confirmPasswordField.getPassword()),
-                    darkModeCheckBox.isSelected()
+                nameField.getText(),
+                emailField.getText(),
+                new String(passwordField.getPassword()),
+                new String(confirmPasswordField.getPassword())
             );
         });
         gbc.gridx = 0;
@@ -101,7 +92,7 @@ public class RegisterView extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         add(registerButton, gbc);
 
-        JButton loginLinkButton = new JButton("Already have an account? Login here.");
+        JButton loginLinkButton = new JButton("Masz już konto? Zaloguj się tutaj.");
         loginLinkButton.setFont(new Font("Arial", Font.PLAIN, 12));
         loginLinkButton.setForeground(Color.BLUE);
         loginLinkButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -123,6 +114,5 @@ public class RegisterView extends JPanel {
         emailField.setText("");
         passwordField.setText("");
         confirmPasswordField.setText("");
-        darkModeCheckBox.setSelected(false);
     }
 }

@@ -9,7 +9,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.Comparator;
 
-
+//darkmode
 class Task implements Serializable {
     private static final long serialVersionUID = 1L;
     String name;
@@ -219,7 +219,6 @@ class User implements Serializable {
     String name;
     String email;
     String passhash;
-    boolean darkmode;
     Map<Team, Role> teamRoles;
 
     public User(String filename) throws IOException, ClassNotFoundException {
@@ -233,20 +232,18 @@ class User implements Serializable {
             this.name = loaded.name;
             this.email = loaded.email;
             this.passhash = loaded.passhash;
-            this.darkmode = loaded.darkmode;
             this.teamRoles = loaded.teamRoles != null ? loaded.teamRoles : new HashMap<>();
         }
     }
 
-    public User(String name, String email, String password, boolean darkmode) {
+    public User(String name, String email, String password) {
         this.name = name;
         this.email = email;
         this.passhash = enhash(password);
-        this.darkmode = darkmode;
         this.teamRoles = new HashMap<>();
     }
 
-    public User(String name, String email, String password, boolean darkmode, String filename) throws IOException {
+    public User(String name, String email, String password, String filename) throws IOException {
         if (!isValidEmail(email)) {
             System.err.println("Niepoprawny email podany dla użytkownika: " + name);
             return;
@@ -258,7 +255,6 @@ class User implements Serializable {
         this.name = name;
         this.email = email;
         this.passhash = enhash(password);
-        this.darkmode = darkmode;
         this.teamRoles = new HashMap<>();
 
     }

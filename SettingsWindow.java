@@ -29,8 +29,8 @@ public class SettingsWindow extends JDialog {
 
         // Dodaj przykładowych użytkowników (w prawdziwej aplikacji pobierz z bazy danych)
         allUsers.add(currentUser);
-        allUsers.add(new User("Jan Kowalski", "jan@example.com", "password123", false));
-        allUsers.add(new User("Anna Nowak", "anna@example.com", "password123", false));
+        allUsers.add(new User("Jan Kowalski", "jan@example.com", "password123"));
+        allUsers.add(new User("Anna Nowak", "anna@example.com", "password123"));
 
         initializeComponents();
         setupLayout();

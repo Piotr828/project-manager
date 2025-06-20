@@ -26,7 +26,8 @@ public class LoginView extends JPanel {
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        JLabel titleLabel = new JLabel("Login to Project Manager");
+        // Tytuł
+        JLabel titleLabel = new JLabel("Zaloguj się");
         titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         gbc.gridx = 0;
@@ -34,6 +35,7 @@ public class LoginView extends JPanel {
         gbc.gridwidth = 2;
         add(titleLabel, gbc);
 
+        // Email
         JLabel emailLabel = new JLabel("Email:");
         gbc.gridx = 0;
         gbc.gridy = 1;
@@ -45,7 +47,8 @@ public class LoginView extends JPanel {
         gbc.gridy = 1;
         add(emailField, gbc);
 
-        JLabel passwordLabel = new JLabel("Password:");
+        // Hasło
+        JLabel passwordLabel = new JLabel("Hasło:");
         gbc.gridx = 0;
         gbc.gridy = 2;
         add(passwordLabel, gbc);
@@ -55,10 +58,13 @@ public class LoginView extends JPanel {
         gbc.gridy = 2;
         add(passwordField, gbc);
 
-        // Login Button
-        JButton loginButton = new JButton("Login");
+        // Przycisk logowania
+        JButton loginButton = new JButton("Zaloguj");
         loginButton.addActionListener((ActionEvent e) -> {
-            loginHandler.handleLogin(emailField.getText(), new String(passwordField.getPassword()));
+            loginHandler.handleLogin(
+                emailField.getText(),
+                new String(passwordField.getPassword())
+            );
         });
         gbc.gridx = 0;
         gbc.gridy = 3;
@@ -66,8 +72,8 @@ public class LoginView extends JPanel {
         gbc.anchor = GridBagConstraints.CENTER;
         add(loginButton, gbc);
 
-        // Register Link/Button
-        JButton registerLinkButton = new JButton("Don't have an account? Register here.");
+        // Link do rejestracji
+        JButton registerLinkButton = new JButton("Nie masz konta? Zarejestruj się");
         registerLinkButton.setFont(new Font("Arial", Font.PLAIN, 12));
         registerLinkButton.setForeground(Color.BLUE);
         registerLinkButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
@@ -77,10 +83,10 @@ public class LoginView extends JPanel {
         registerLinkButton.addActionListener((ActionEvent e) -> mainFrame.showRegisterView());
 
         gbc.gridx = 0;
-        gbc.gridy = 4; // Next row
+        gbc.gridy = 4;
         gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.insets = new Insets(5, 10, 10, 10); // Smaller top inset
+        gbc.insets = new Insets(5, 10, 10, 10);
         add(registerLinkButton, gbc);
     }
 
