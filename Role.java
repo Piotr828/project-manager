@@ -13,6 +13,18 @@ public class Role implements Serializable {
         this.perm = perm;
     }
 
+    public static Role createAdministrator() {
+        return new Role("Administrator", "Administrator Zespołu", (byte) 127);
+    }
+
+    public static Role createMember() {
+        return new Role("Członek", "Członek Zespołu", (byte) 7);
+    }
+
+    public static Role createViewer() {
+        return new Role("Obserwator", "Obserwator Zespołu", (byte) 1);
+    }
+
     public String getName() {
         return name;
     }
@@ -35,18 +47,6 @@ public class Role implements Serializable {
 
     public void setPerm(byte perm) {
         this.perm = perm;
-    }
-
-    public static Role createAdministrator() {
-        return new Role("Administrator", "Administrator Zespołu", (byte) 127);
-    }
-
-    public static Role createMember() {
-        return new Role("Członek", "Członek Zespołu", (byte) 7);
-    }
-
-    public static Role createViewer() {
-        return new Role("Obserwator", "Obserwator Zespołu", (byte) 1);
     }
 
     @Override

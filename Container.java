@@ -5,9 +5,9 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
-import java.util.regex.Matcher;
+import java.util.logging.Logger;
 import java.util.regex.Pattern;
-
+import java.util.stream.Collectors;
 
 class Task implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -20,42 +20,130 @@ class Task implements Serializable {
         this.status = status;
         this.diffic = diffic;
     }
-};
+}
 
 class Project implements Serializable {
     private static final long serialVersionUID = 1L;
-    byte progress;
-    long start;
-    long deadline;
-    long predict;
-    int delay;
-    List<Task> tasks;
-    String name;
-    String descript;
-    int red;
-    int green;
-    int blue;
-    Team team;
+
+    private byte progress;
+    private long start;
+    private long deadline;
+    private long predict;
+    private int delay;
+    private List<Task> tasks;
+    private String name;
+    private String descript;
+    private int red;
+    private int green;
+    private int blue;
+    private Team team;
 
     public Project(String name, String description, long start, long deadline, int red, int green, int blue) {
-        this.name = name;
-        this.descript = description;
-        this.start = start;
-        this.deadline = deadline;
-        this.tasks = new ArrayList<>();
-        this.progress = 0;
-        this.predict = 0;
-        this.delay = (int) (predict - deadline) / 86400;
-        this.red = red;
-        this.green = green;
-        this.blue = blue;
-        this.team = null;
-        calculatePredict(); // Obliczamy przewidywaną datę na podstawie zadań
-
+        this.setName(name);
+        this.setDescript(description);
+        this.setStart(start);
+        this.setDeadline(deadline);
+        this.setTasks(new ArrayList<>());
+        this.setProgress((byte) 0);
+        this.setPredict(0);
+        this.setDelay((int) (getPredict() - deadline) / 86400);
+        this.setRed(red);
+        this.setGreen(green);
+        this.setBlue(blue);
+        this.setTeam(null);
+        calculatePredict();
     }
 
     public Project(String name, String description, long start, long deadline) {
         this(name, description, start, deadline, 0, 0, 0);
+    }
+
+    public long getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(long deadline) {
+        this.deadline = deadline;
+    }
+
+    public long getStart() {
+        return start;
+    }
+
+    public void setStart(long start) {
+        this.start = start;
+    }
+
+    public long getPredict() {
+        return predict;
+    }
+
+    public void setPredict(long predict) {
+        this.predict = predict;
+    }
+
+    public int getDelay() {
+        return delay;
+    }
+
+    public void setDelay(int delay) {
+        this.delay = delay;
+    }
+
+    public List<Task> getTasks() {
+        return tasks;
+    }
+
+    public void setTasks(List<Task> tasks) {
+        this.tasks = tasks;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getDescript() {
+        return descript;
+    }
+
+    public void setDescript(String descript) {
+        this.descript = descript;
+    }
+
+    public int getRed() {
+        return red;
+    }
+
+    public void setRed(int red) {
+        this.red = red;
+    }
+
+    public int getGreen() {
+        return green;
+    }
+
+    public void setGreen(int green) {
+        this.green = green;
+    }
+
+    public int getBlue() {
+        return blue;
+    }
+
+    public void setBlue(int blue) {
+        this.blue = blue;
+    }
+
+    public byte getProgress() {
+        return progress;
+    }
+
+    public void setProgress(byte progress) {
+        this.progress = progress;
     }
 
     public Team getTeam() {
@@ -66,11 +154,9 @@ class Project implements Serializable {
         this.team = team;
     }
 
-
     public String predictDate() {
-        LocalDate date = LocalDate.ofEpochDay(predict);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        return date.format(formatter);
+        LocalDate date = LocalDate.ofEpochDay(getPredict());
+        return date.format(DateTimeFormatter.ofPattern("dd.MM.yyyy"));
     }
 
     public void addTask(Task task) {
@@ -78,12 +164,7 @@ class Project implements Serializable {
     }
 
     public boolean removeTaskByName(String taskName) {
-        for (Task task : tasks) {
-            if (task.name.equals(taskName)) {
-                return tasks.remove(task);
-            }
-        }
-        return false;
+        return tasks.removeIf(task -> task.name.equals(taskName));
     }
 
     public boolean removeTask(Task task) {
@@ -95,8 +176,9 @@ class Project implements Serializable {
         int currentDay = (int) (currentTimeMillis / (1000 * 60 * 60 * 24));
         int totalDifficulty = 0;
         int taskTrue = 0;
+
         for (Task task : tasks) {
-            if (task.status == true) {
+            if (task.status) {
                 totalDifficulty += task.diffic;
                 taskTrue++;
             }
@@ -104,210 +186,145 @@ class Project implements Serializable {
 
         if (taskTrue > 0) {
             this.predict = currentDay + (currentDay - start) * tasks.size() / taskTrue;
-            this.delay = (int) (this.predict - deadline);
         } else {
             this.predict = currentDay;
-            this.delay = (int) (this.predict - deadline);
         }
+        this.delay = (int) (this.predict - deadline);
     }
 
     public int progress() {
-        int total = 0;
-        int done = 0;
-        for (Task t : tasks) {
-            total += t.diffic;
-            if (t.status) {
-                done += t.diffic;
-            }
-        }
-        if (total == 0) return 0;
-        return (int) (100.0 * done / total);
+        int total = tasks.stream().mapToInt(t -> t.diffic).sum();
+        int done = tasks.stream().filter(t -> t.status).mapToInt(t -> t.diffic).sum();
+        return total == 0 ? 0 : (int) (100.0 * done / total);
     }
-
-
-};
-
+}
 
 class Container implements Serializable {
     private static final long serialVersionUID = 2L;
-    public byte sortby;
-    List<Project> projects = new ArrayList<>();
+    private static byte sortby = 0;
     List<Team> teams = new ArrayList<>();
+    private List<Project> projects = new ArrayList<>();
+
+    public static byte getSortby() {
+        return sortby;
+    }
+
+    public static void setSortby(byte sortby) {
+        Container.sortby = sortby;
+    }
 
     public void addTeam(Team team) {
         teams.add(team);
     }
-    
+
     public void removeTeam(Team team) {
         teams.remove(team);
     }
-    
+
     public List<Team> getTeams() {
         return new ArrayList<>(teams);
     }
-    
+
     public List<Team> getUserTeams(User user) {
         return teams.stream()
-                   .filter(team -> team.isMember(user))
-                   .collect(ArrayList::new, ArrayList::add, ArrayList::addAll);
+                .filter(team -> team.isMember(user))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public void addProject(Project project) {
-        projects.add(project);
+        getProjects().add(project);
     }
 
     public boolean removeProjectByName(String projectName) {
-        for (Project project : projects) {
-            if (project.name.equals(projectName)) {
-                return projects.remove(project);
-            }
-        }
-        return false;
+        return getProjects().removeIf(project -> project.getName().equals(projectName));
     }
 
     public void removeProject(Project project) {
-        projects.remove(project);
+        getProjects().remove(project);
+    }
+
+    public User findUserByEmail(String email) {
+        return teams.stream()
+                .flatMap(team -> team.getMembers().stream())
+                .filter(user -> user.getEmail().equals(email))
+                .findFirst()
+                .orElse(null);
     }
 
     public void sortProjects() {
-        Comparator<Project> comparator = null;
-        boolean reverse = sortby < 0;
-        int key = Math.abs(sortby);
-
-        switch (key) {
-            case 0:
-                comparator = Comparator.comparing(p -> p.name.toLowerCase());
-                break;
-            case 1:
-                comparator = Comparator.comparingLong(p -> p.start);
-                break;
-            case 2:
-                comparator = Comparator.comparingLong(p -> p.deadline);
-                break;
-            case 3:
-                comparator = Comparator.comparingInt(p ->
-                        p.tasks.stream().mapToInt(t -> t.diffic).sum());
-                break;
-            case 4:
-                comparator = Comparator.comparingInt(p -> p.progress);
-                break;
-            case 5:
-                comparator = Comparator.comparingLong(p -> p.predict);
-                break;
-            case 6:
-                comparator = Comparator.comparingInt(p -> p.delay);
-                break;
-            case 7:
-                comparator = Comparator
-                        .comparingInt((Project p) -> p.red)
-                        .thenComparingInt(p -> p.green)
-                        .thenComparingInt(p -> p.blue);
-                break;
-            default:
-                return;
-        }
-
-        if (reverse && comparator != null) {
-            comparator = comparator.reversed();
-        }
-
-        projects.sort(comparator);
-
-
+        Comparator<Project> comparator = getProjectComparator();
         if (comparator != null) {
-            if (reverse) {
-                projects.sort(comparator.reversed());
-            } else {
-                projects.sort(comparator);
-            }
+            getProjects().sort(comparator);
         }
+    }
 
+    public Comparator<Project> getProjectComparator() {
+        boolean reverse = getSortby() < 0;
+        int key = Math.abs(getSortby());
+
+        Comparator<Project> comparator = switch (key) {
+            case 1 -> Comparator.comparing(p -> p.getName().toLowerCase());
+            case 2 -> Comparator.comparingLong(Project::getStart);
+            case 3 -> Comparator.comparingLong(Project::getDeadline);
+            case 4 -> Comparator.comparingInt(p -> p.getTasks().stream().mapToInt(t -> t.diffic).sum());
+            case 5 -> Comparator.comparingInt(Project::progress);
+            case 6 -> Comparator.comparingLong(Project::getPredict);
+            case 7 -> Comparator.comparingInt(Project::getDelay);
+            case 8 -> Comparator
+                    .comparingInt(Project::getRed)
+                    .thenComparingInt(Project::getGreen)
+                    .thenComparingInt(Project::getBlue);
+            default -> null;
+        };
+
+        return (comparator != null && reverse) ? comparator.reversed() : comparator;
+    }
+
+    public List<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(List<Project> projects) {
+        this.projects = projects;
     }
 }
-
 
 class User implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    String name;
-    String email;
-    String passhash;
-    boolean darkmode;
-    Map<Team, Role> teamRoles;
+    private static final Logger logger = Logger.getLogger(User.class.getName());
+
+    private String name;
+    private String email;
+    private String passhash;
+    private Map<Team, Role> teamRoles;
 
     public User(String filename) throws IOException, ClassNotFoundException {
-        File file = new File(filename);
-        if (!file.exists()) {
-            throw new FileNotFoundException("Plik użytkownika nie znaleziony: " + filename);
-        }
-
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(file))) {
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(filename))) {
             User loaded = (User) ois.readObject();
-            this.name = loaded.name;
-            this.email = loaded.email;
-            this.passhash = loaded.passhash;
-            this.darkmode = loaded.darkmode;
-            this.teamRoles = loaded.teamRoles != null ? loaded.teamRoles : new HashMap<>();
+            this.setName(loaded.getName());
+            this.setEmail(loaded.getEmail());
+            this.setPasshash(loaded.getPasshash());
+            this.setTeamRoles(Objects.requireNonNullElseGet(loaded.getTeamRoles(), HashMap::new));
         }
     }
 
-    public User(String name, String email, String password, boolean darkmode) {
-        this.name = name;
-        this.email = email;
-        this.passhash = enhash(password);
-        this.darkmode = darkmode;
-        this.teamRoles = new HashMap<>();
-    }
-
-    public User(String name, String email, String password, boolean darkmode, String filename) throws IOException {
-        if (!isValidEmail(email)) {
-            System.err.println("Niepoprawny email podany dla użytkownika: " + name);
-            return;
-        }
-        if (!isValidPassword(password)) {
-            System.err.println("Niepoprawne hasło podane dla użytkownika: " + name);
-            return;
-        }
-        this.name = name;
-        this.email = email;
-        this.passhash = enhash(password);
-        this.darkmode = darkmode;
-        this.teamRoles = new HashMap<>();
-
+    public User(String name, String email, String password) {
+        this.setName(name);
+        this.setEmail(email);
+        this.setPasshash(enhash(password));
+        this.setTeamRoles(new HashMap<>());
     }
 
     public static boolean isValidEmail(String email) {
         if (email == null) return false;
-        String emailRegex = "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$";
-        Pattern pattern = Pattern.compile(emailRegex);
-        Matcher matcher = pattern.matcher(email);
-        return matcher.matches();
+        return Pattern.matches("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$", email);
     }
-
 
     public static boolean isValidPassword(String password) {
         if (password == null) return false;
-        // Hasło musi mieć co najmniej 8 znaków, zawierać jedną dużą literę, jedną cyfrę i jeden znak specjalny
-        String passwordRegex = "^(?=.*[A-Z])(?=.*[0-9])(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$";
-        Pattern pattern = Pattern.compile(passwordRegex);
-        Matcher matcher = pattern.matcher(password);
-        return matcher.matches();
+        return Pattern.matches("^(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$", password);
     }
-
-
-    public void exportToFile(String filename) {
-        File file = new File(filename);
-        File parentDir = file.getParentFile();
-        if (parentDir != null && !parentDir.exists()) {
-            parentDir.mkdirs();
-        }
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
-            oos.writeObject(this);
-        } catch (IOException e) {
-            System.err.println("Eksport użytkownika " + this.name + " do " + filename + " nie powiódł się: " + e.getMessage());
-        }
-    }
-
 
     public static String enhash(String input) {
         if (input == null) return null;
@@ -320,16 +337,26 @@ class User implements Serializable {
             }
             return hexString.toString();
         } catch (NoSuchAlgorithmException e) {
-            System.err.println("SHA-256 Algorithm not found: " + e.getMessage());
+            logger.warning("SHA-256 nie dostępne: " + e.getMessage());
             return null;
         }
     }
 
-    private Map<Team, Role> getTeamRolesMap() {
-        if (this.teamRoles == null) {
-            this.teamRoles = new HashMap<>();
+    public void exportToFile(String filename) {
+        File file = new File(filename);
+        Optional.ofNullable(file.getParentFile()).ifPresent(File::mkdirs);
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(filename))) {
+            oos.writeObject(this);
+        } catch (IOException e) {
+            logger.warning("Eksport użytkownika " + this.getName() + " nie powiódł się: " + e.getMessage());
         }
-        return this.teamRoles;
+    }
+
+    private Map<Team, Role> getTeamRolesMap() {
+        if (this.getTeamRoles() == null) {
+            this.setTeamRoles(new HashMap<>());
+        }
+        return this.getTeamRoles();
     }
 
     public void addTeam(Team team, Role role) {
@@ -354,54 +381,81 @@ class User implements Serializable {
 
     @Override
     public String toString() {
-        return name != null ? name : "Użytkownik bez nazwy";
+        return getName() != null ? getName() : "Użytkownik bez nazwy";
     }
 
-    public static void main(String[] args) {
+    @Override
+    public boolean equals(Object obj) {
+        return (this == obj) || (obj instanceof User other && getEmail().equals(other.getEmail()));
+    }
 
+    @Override
+    public int hashCode() {
+        return getEmail().hashCode();
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPasshash() {
+        return passhash;
+    }
+
+    public void setPasshash(String passhash) {
+        this.passhash = passhash;
+    }
+
+    public Map<Team, Role> getTeamRoles() {
+        return teamRoles;
+    }
+
+    public void setTeamRoles(Map<Team, Role> teamRoles) {
+        this.teamRoles = teamRoles;
     }
 }
 
-
 class Calendar {
-    private StringBuilder sb;
-    private SimpleDateFormat sdf;
+    private final StringBuilder sb;
+    private final SimpleDateFormat sdf;
 
     public Calendar(Container container) {
         sb = new StringBuilder();
-        sb.append("BEGIN:VCALENDAR\n");
-        sb.append("VERSION:2.0\n");
-        sb.append("PRODID:-//ProjectManager//ICS Generator//EN\n");
-
+        sb.append("BEGIN:VCALENDAR\nVERSION:2.0\nPRODID:-");
         sdf = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
-
-        for (Project project : container.projects) {
-            addEvent(project);
-        }
-
+        container.getProjects().forEach(this::addEvent);
         sb.append("END:VCALENDAR\n");
     }
 
     private void addEvent(Project project) {
         sb.append("BEGIN:VEVENT\n");
-        sb.append("UID:").append(UUID.randomUUID().toString()).append("\n");
+        sb.append("UID:").append(UUID.randomUUID()).append("\n");
         sb.append("DTSTAMP:").append(sdf.format(new Date())).append("\n");
-        sb.append("SUMMARY:").append(escapeText(project.name)).append("\n");
+        sb.append("SUMMARY:").append(escapeText(project.getName())).append("\n");
         sb.append("DESCRIPTION:").append(escapeText(buildDescription(project))).append("\n");
-        sb.append("DTSTART:").append(formatDate(project.start)).append("\n");
-        sb.append("DTEND:").append(formatDate(project.deadline)).append("\n");
+        sb.append("DTSTART:").append(formatDate(project.getStart())).append("\n");
+        sb.append("DTEND:").append(formatDate(project.getDeadline())).append("\n");
         sb.append("END:VEVENT\n");
     }
 
     private String buildDescription(Project project) {
-        StringBuilder desc = new StringBuilder();
-        desc.append(project.descript).append("\n");
-        desc.append("Zadania:\n");
-        for (Task task : project.tasks) {
-            desc.append("- ").append(task.name).append("\n");
-        }
-        return desc.toString();
+        return project.getDescript() + "\nZadania:\n" +
+                project.getTasks().stream()
+                        .map(t -> "- " + t.name)
+                        .collect(Collectors.joining("\n")) + "\n";
     }
 
     private String escapeText(String text) {
@@ -413,7 +467,7 @@ class Calendar {
     }
 
     private String formatDate(long timestampDays) {
-        long millis = timestampDays * 86400000L; // Konwersja dni Unix do milisekund
+        long millis = timestampDays * 86_400_000L;
         return sdf.format(new Date(millis));
     }
 
@@ -426,5 +480,4 @@ class Calendar {
     public String getICS() {
         return sb.toString();
     }
-
 }

@@ -1,14 +1,18 @@
-import java.awt.*;
-import java.awt.event.*;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class DashboardView extends JPanel {
-    private final MainFrame frame;
     public final Container container;
+    private final MainFrame frame;
     private final JPanel projectsPanel;
 
     public DashboardView(Container container, MainFrame frame) {
@@ -51,6 +55,111 @@ public class DashboardView extends JPanel {
         return header;
     }
 
+    private void exportICS(ActionEvent e) {
+        try {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Zapisz plik ICS");
+            if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+
+            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
+            if (!filePath.endsWith(".ics")) filePath += ".ics";
+
+            new Calendar(container).saveToFile(filePath);
+
+            JOptionPane.showMessageDialog(this, "Plik ICS zapisano jako:\n" + filePath,
+                    "Eksport zakończony", JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Błąd podczas eksportu: " + ex.getMessage(),
+                    "Błąd", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    void refreshProjects() {
+        projectsPanel.removeAll();
+        container.sortProjects();
+        User currentUser = AuthManager.getActiveUser();
+        List<Project> ownTeamProjects = new ArrayList<>();
+        List<Project> publicProjects = new ArrayList<>();
+
+        for (Project project : container.getProjects()) {
+            Team team = project.getTeam();
+            if (team != null && team.isMember(currentUser)) {
+                ownTeamProjects.add(project);
+            } else if (team == null) {
+                publicProjects.add(project);
+            }
+        }
+
+        Comparator<Project> comparator = container.getProjectComparator();
+        if (comparator != null) {
+            ownTeamProjects.sort(comparator);
+            publicProjects.sort(comparator);
+        }
+
+
+        projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+
+        if (!ownTeamProjects.isEmpty()) {
+            for (Project project : ownTeamProjects) {
+                project.calculatePredict();
+                ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
+                card.setAlignmentX(Component.LEFT_ALIGNMENT);
+                projectsPanel.add(card);
+                projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
+        }
+
+        if (!ownTeamProjects.isEmpty() && !publicProjects.isEmpty()) {
+
+            JSeparator separator = new JSeparator(SwingConstants.HORIZONTAL);
+            separator.setForeground(new Color(180, 180, 180));
+            separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
+            projectsPanel.add(separator);
+            projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+        }
+
+        if (!publicProjects.isEmpty()) {
+            for (Project project : publicProjects) {
+                project.calculatePredict();
+                ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
+                card.setAlignmentX(Component.LEFT_ALIGNMENT);
+                projectsPanel.add(card);
+                projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
+            }
+        }
+
+        revalidate();
+        repaint();
+    }
+
+    private void resizeProjectCards() {
+        int width = projectsPanel.getWidth() - 30;
+        for (Component comp : projectsPanel.getComponents()) {
+            if (comp instanceof ProjectCard card) {
+                card.setMaximumSize(new Dimension(width, 220));
+            }
+        }
+    }
+
+    private void addProjectsResizeListener() {
+        ComponentAdapter listener = new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                SwingUtilities.invokeLater(DashboardView.this::resizeProjectCards);
+            }
+        };
+        for (Component c : getComponents()) {
+            if (c instanceof JScrollPane scroll) {
+                scroll.getViewport().addComponentListener(listener);
+            }
+        }
+    }
+
+    private void showAddProjectForm(ActionEvent e) {
+        ProjectForm form = new ProjectForm(container, this::refreshProjects);
+        form.setVisible(true);
+    }
+
     private class SortPanel extends JPanel {
         public SortPanel() {
             setLayout(new FlowLayout(FlowLayout.RIGHT, 5, 0));
@@ -60,24 +169,25 @@ public class DashboardView extends JPanel {
             add(sortLabel);
 
             String[] options = {
-                "Nazwy (A-Z)", "Data rozpoczęcia", "Terminu",
-                "Trudności", "Postępu", "Przewidywania",
-                "Opóźnienia", "Koloru"
+                    "Nazwy (A-Z)", "Data rozpoczęcia", "Terminu",
+                    "Trudności", "Postępu", "Przewidywania",
+                    "Opóźnienia", "Koloru"
             };
             JComboBox<String> sortCombo = new JComboBox<>(options);
-            sortCombo.setSelectedIndex(Math.abs(container.sortby) - 1);
+            sortCombo.setSelectedIndex(Math.abs(Container.getSortby()) - 1);
             add(sortCombo);
 
             JCheckBox reverseCheck = new JCheckBox("Odwrotnie");
-            reverseCheck.setSelected(container.sortby < 0);
+            reverseCheck.setSelected(Container.getSortby() < 0);
             add(reverseCheck);
 
             JButton sortButton = new JButton("Sortuj");
             sortButton.addActionListener(e -> {
                 int selected = sortCombo.getSelectedIndex() + 1;
-                container.sortby = (byte) (reverseCheck.isSelected() ? -(selected + 1) : (selected + 1));
+                Container.setSortby((byte) (reverseCheck.isSelected() ? -selected : selected));
                 refreshProjects();
             });
+
             add(sortButton);
         }
     }
@@ -110,22 +220,26 @@ public class DashboardView extends JPanel {
             String filePath = fileChooser.getSelectedFile().getAbsolutePath();
             if (!filePath.endsWith(".txt")) filePath += ".txt";
 
-            List<Project> projects = container.projects;
+            List<Project> projects = container.getProjects();
             int totalProjects = projects.size();
-            int totalTasks = 0, completedTasks = 0;
-            int delayCount = 0, delaySum = 0, maxDelay = 0, minDelay = Integer.MAX_VALUE;
+            int totalTasks = 0;
+            int completedTasks = 0;
+            int delayCount = 0;
+            int delaySum = 0;
+            int maxDelay = 0;
+            int minDelay = Integer.MAX_VALUE;
 
             for (Project p : projects) {
-                for (Task t : p.tasks) {
+                for (Task t : p.getTasks()) {
                     totalTasks++;
                     if (t.status) completedTasks++;
                 }
 
-                if (p.delay >= 0) {
+                if (p.getDelay() >= 0) {
                     delayCount++;
-                    delaySum += p.delay;
-                    maxDelay = Math.max(maxDelay, p.delay);
-                    minDelay = Math.min(minDelay, p.delay);
+                    delaySum += p.getDelay();
+                    maxDelay = Math.max(maxDelay, p.getDelay());
+                    minDelay = Math.min(minDelay, p.getDelay());
                 }
             }
 
@@ -138,7 +252,7 @@ public class DashboardView extends JPanel {
                 writer.write("Liczba projektów: " + totalProjects + "\n");
                 writer.write("Łączna liczba zadań: " + totalTasks + "\n");
                 writer.write("Ukończone zadania: " + completedTasks + " (" +
-                             (totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0) + "%)\n");
+                        (totalTasks > 0 ? (completedTasks * 100 / totalTasks) : 0) + "%)\n");
                 writer.write("Średni postęp projektów: " + String.format("%.2f", avgProgress) + "%\n");
                 writer.write("Średnie opóźnienie: " + String.format("%.2f", avgDelay) + " dni\n");
                 writer.write("Największe opóźnienie: " + maxDelay + " dni\n");
@@ -155,85 +269,4 @@ public class DashboardView extends JPanel {
         }
     }
 
-    private void exportICS(ActionEvent e) {
-        try {
-            JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Zapisz plik ICS");
-            if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-
-            String filePath = fileChooser.getSelectedFile().getAbsolutePath();
-            if (!filePath.endsWith(".ics")) filePath += ".ics";
-
-            new Calendar(container).saveToFile(filePath);
-
-            JOptionPane.showMessageDialog(this, "Plik ICS zapisano jako:\n" + filePath,
-                    "Eksport zakończony", JOptionPane.INFORMATION_MESSAGE);
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Błąd podczas eksportu: " + ex.getMessage(),
-                    "Błąd", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
-    void refreshProjects() {
-        projectsPanel.removeAll();
-
-        JLabel sortInfo = new JLabel(getSortDescription());
-        sortInfo.setFont(new Font("Arial", Font.ITALIC, 12));
-        sortInfo.setBorder(BorderFactory.createEmptyBorder(0, 5, 10, 0));
-        projectsPanel.add(sortInfo);
-
-        for (Project project : container.projects) {
-            project.calculatePredict();
-            ProjectCard card = new ProjectCard(project, () -> frame.showProjectDetail(project));
-            card.setAlignmentX(Component.LEFT_ALIGNMENT);
-            projectsPanel.add(card);
-            projectsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        }
-
-        revalidate();
-        repaint();
-    }
-
-    private String getSortDescription() {
-        String[] sortOptions = {
-            "Nazwa (A-Z)", "Data rozpoczęcia", "Termin",
-            "Suma trudności", "Postęp", "Przewidywane zakończenie",
-            "Opóźnienie", "Kolor"
-        };
-
-        int absSort = Math.abs(container.sortby) - 1;
-        if (absSort < 0 || absSort >= sortOptions.length) return "Sortowanie: domyślne";
-
-        String direction = container.sortby < 0 ? "malejąco" : "rosnąco";
-        return "Sortowanie: " + sortOptions[absSort] + " (" + direction + ")";
-    }
-
-    private void resizeProjectCards() {
-        int width = projectsPanel.getWidth() - 30;
-        for (Component comp : projectsPanel.getComponents()) {
-            if (comp instanceof ProjectCard card) {
-                card.setMaximumSize(new Dimension(width, 220));
-            }
-        }
-    }
-
-    private void addProjectsResizeListener() {
-        ComponentAdapter listener = new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                SwingUtilities.invokeLater(DashboardView.this::resizeProjectCards);
-            }
-        };
-        for (Component c : getComponents()) {
-            if (c instanceof JScrollPane scroll) {
-                scroll.getViewport().addComponentListener(listener);
-            }
-        }
-    }
-
-    private void showAddProjectForm(ActionEvent e) {
-        ProjectForm form = new ProjectForm(container, this::refreshProjects);
-        form.setVisible(true);
-    }
-    
 }

@@ -3,16 +3,11 @@ import java.util.*;
 
 public class Team implements Serializable {
     private static final long serialVersionUID = 2L;
-    
+    private final User creator;
+    private final long createdDate;
     private String name;
     private String description;
     private Map<User, Role> members;
-    private User creator;
-    private long createdDate;
-
-    public void setMembers(Map<User, Role> members) {
-        this.members = members;
-    }
 
     public Team(String name, String description, User creator) {
         this.name = name;
@@ -21,17 +16,17 @@ public class Team implements Serializable {
         this.createdDate = System.currentTimeMillis() / (1000 * 60 * 60 * 24);
         this.members = new HashMap<>();
 
-        // Dodaj twórcę jako administratora
+
         this.members.put(creator, Role.createAdministrator());
     }
-    
+
     public void addMember(User user, Role role) {
         members.put(user, role);
     }
-    
+
     public boolean removeMember(User user) {
         if (user.equals(creator)) {
-            return false; 
+            return false;
         }
         if (members.remove(user) != null) {
             user.removeTeam(this);
@@ -39,7 +34,7 @@ public class Team implements Serializable {
         }
         return false;
     }
-    
+
     public void disbandTeam() {
         Set<User> membersCopy = new HashSet<>(members.keySet());
         for (User member : membersCopy) {
@@ -47,29 +42,33 @@ public class Team implements Serializable {
         }
         members.clear();
     }
-    
+
     public void updateMemberRole(User user, Role newRole) {
         if (members.containsKey(user) && !user.equals(creator)) {
             members.put(user, newRole);
         }
     }
-    
+
     public boolean isMember(User user) {
         return members.containsKey(user);
     }
-    
+
     public Role getUserRole(User user) {
         return members.get(user);
     }
-    
+
     public Set<User> getMembers() {
         return members.keySet();
     }
-    
+
+    public void setMembers(Map<User, Role> members) {
+        this.members = members;
+    }
+
     public Map<User, Role> getMembersWithRoles() {
         return new HashMap<>(members);
     }
-    
+
     public boolean isCreator(User user) {
         return creator.equals(user);
     }
@@ -77,32 +76,32 @@ public class Team implements Serializable {
     public String getName() {
         return name;
     }
-    
+
     public void setName(String name) {
         this.name = name;
     }
-    
+
     public String getDescription() {
         return description;
     }
-    
+
     public void setDescription(String description) {
         this.description = description;
     }
-    
+
     public User getCreator() {
         return creator;
     }
-    
+
     public long getCreatedDate() {
         return createdDate;
     }
-    
+
     @Override
     public String toString() {
         return name;
     }
-    
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -110,7 +109,7 @@ public class Team implements Serializable {
         Team team = (Team) obj;
         return name.equals(team.name) && creator.equals(team.creator);
     }
-    
+
     @Override
     public int hashCode() {
         return Objects.hash(name, creator);

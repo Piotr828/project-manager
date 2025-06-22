@@ -1,3 +1,7 @@
+import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
+import javax.swing.plaf.basic.BasicProgressBarUI;
 import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
@@ -5,15 +9,12 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import javax.swing.*;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
-import javax.swing.plaf.basic.BasicProgressBarUI;
 
 
 public class ProjectCard extends JPanel {
 
     private final Project project;
+
     public ProjectCard(Project project, Runnable onClick) {
         this.project = project;
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
@@ -22,21 +23,21 @@ public class ProjectCard extends JPanel {
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(0, 6, 0, 0, new Color(project.red, project.green, project.blue)),
-            BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
-                BorderFactory.createEmptyBorder(15, 20, 15, 20)
-            )
+                BorderFactory.createMatteBorder(0, 6, 0, 0, new Color(project.getRed(), project.getGreen(), project.getBlue())),
+                BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(Color.LIGHT_GRAY),
+                        BorderFactory.createEmptyBorder(15, 20, 15, 20)
+                )
         ));
 
-        String displayName = project.name.length() > 30 ? 
-            project.name.substring(0, 27) + "..." : project.name;
+        String displayName = project.getName().length() > 30 ?
+                project.getName().substring(0, 27) + "..." : project.getName();
         JLabel nameLabel = new JLabel(displayName);
         nameLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         nameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        nameLabel.setToolTipText(project.name);
+        nameLabel.setToolTipText(project.getName());
 
-        JTextArea descArea = new JTextArea(project.descript);
+        JTextArea descArea = new JTextArea(project.getDescript());
         descArea.setFont(new Font("SansSerif", Font.PLAIN, 13));
         descArea.setLineWrap(true);
         descArea.setWrapStyleWord(true);
@@ -56,8 +57,8 @@ public class ProjectCard extends JPanel {
         valuePanel.setOpaque(false);
         valuePanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel delayLabel = new JLabel(Math.max(project.delay, 0) + " dni");
-        delayLabel.setForeground(project.delay > 0 ? Color.RED : new Color(0, 128, 0));
+        JLabel delayLabel = new JLabel(Math.max(project.getDelay(), 0) + " dni");
+        delayLabel.setForeground(project.getDelay() > 0 ? Color.RED : new Color(0, 128, 0));
         delayLabel.setHorizontalAlignment(SwingConstants.CENTER);
         valuePanel.add(delayLabel);
 
@@ -65,7 +66,7 @@ public class ProjectCard extends JPanel {
         predictLabel.setHorizontalAlignment(SwingConstants.CENTER);
         valuePanel.add(predictLabel);
 
-        JLabel deadlineLabel = new JLabel(formatDate(project.deadline));
+        JLabel deadlineLabel = new JLabel(formatDate(project.getDeadline()));
         deadlineLabel.setHorizontalAlignment(SwingConstants.CENTER);
         valuePanel.add(deadlineLabel);
 
@@ -73,11 +74,18 @@ public class ProjectCard extends JPanel {
         progressBar.setValue(project.progress());
         progressBar.setStringPainted(true);
         progressBar.setFont(new Font("SansSerif", Font.BOLD, 12));
-        progressBar.setForeground(new Color(project.red, project.green, project.blue));
+        progressBar.setForeground(new Color(project.getRed(), project.getGreen(), project.getBlue()));
         progressBar.setAlignmentX(Component.LEFT_ALIGNMENT);
         progressBar.setUI(new BasicProgressBarUI() {
-            protected Color getSelectionBackground() { return Color.BLACK; }
-            protected Color getSelectionForeground() { return Color.WHITE; }
+            @Override
+            protected Color getSelectionBackground() {
+                return Color.BLACK;
+            }
+
+            @Override
+            protected Color getSelectionForeground() {
+                return Color.WHITE;
+            }
         });
 
         add(nameLabel);
@@ -105,8 +113,14 @@ public class ProjectCard extends JPanel {
                 }
             }
 
-            @Override public void ancestorRemoved(AncestorEvent event) {}
-            @Override public void ancestorMoved(AncestorEvent event) {}
+            
+            @Override
+            public void ancestorRemoved(AncestorEvent event) {
+            }
+
+            @Override
+            public void ancestorMoved(AncestorEvent event) {
+            }
         });
 
         MouseAdapter clickHandler = new MouseAdapter() {
@@ -124,20 +138,20 @@ public class ProjectCard extends JPanel {
 
     private void setupContextMenu() {
         JPopupMenu contextMenu = new JPopupMenu();
-        
+
         JMenuItem deleteItem = new JMenuItem("Usuń projekt");
         deleteItem.addActionListener(e -> {
             int response = JOptionPane.showConfirmDialog(
-                ProjectCard.this,
-                "Czy na pewno chcesz usunąć projekt '" + project.name + "'?",
-                "Potwierdzenie usunięcia",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE
+                    ProjectCard.this,
+                    "Czy na pewno chcesz usunąć projekt '" + project.getName() + "'?",
+                    "Potwierdzenie usunięcia",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.WARNING_MESSAGE
             );
-            
+
             if (response == JOptionPane.YES_OPTION) {
                 Container container = ((DashboardView) SwingUtilities.getAncestorOfClass(
-                    DashboardView.class, ProjectCard.this)).container;
+                        DashboardView.class, ProjectCard.this)).container;
                 container.removeProject(project);
                 Main.saveProjects(container);
                 SwingUtilities.invokeLater(() -> {
@@ -150,11 +164,11 @@ public class ProjectCard extends JPanel {
                 });
             }
         });
-        
+
         contextMenu.add(deleteItem);
         setComponentPopupMenu(contextMenu);
     }
-    
+
 
     private void updateWidth() {
         if (getParent() != null) {

@@ -1,104 +1,102 @@
+import javax.swing.*;
+import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 
 public class SettingsWindow extends JDialog {
+    private static final Font HEADER_FONT = new Font("Arial", Font.BOLD, 14);
+    private static final String TITLE = "Ustawienia - Zarządzanie Zespołami";
+    private static final String TEAM_LIST_LABEL = "Twoje zespoły:";
+    private static final String NEW_TEAM_BUTTON_TEXT = "+ Nowy zespół";
+
     private final User currentUser;
     private final Container container;
-    private List<Team> teams;
-    private List<User> allUsers;
-    private JList<Team> teamList;
-    private DefaultListModel<Team> teamListModel;
-    private JPanel teamDetailsPanel;
-    private Team selectedTeam;
+    private final List<Team> teams;
+    private final List<User> allUsers;
 
-    public User getCurrentUser() {
-        return currentUser;
-    }
+    private final DefaultListModel<Team> teamListModel = new DefaultListModel<>();
+    private final JList<Team> teamList = new JList<>(teamListModel);
+    private final JPanel teamDetailsPanel = new JPanel(new BorderLayout());
+
+    private Team selectedTeam;
 
     public SettingsWindow(User currentUser, Container container) {
         this.currentUser = currentUser;
         this.container = container;
         this.teams = container.getTeams();
-        System.out.println("DEBUG: SettingsWindow - liczba zespołów w kontenerze: " + container.getTeams().size());
-        this.allUsers = new ArrayList<>();
+        this.allUsers = AuthManager.getAllUsers(); 
 
-        // Dodaj przykładowych użytkowników (w prawdziwej aplikacji pobierz z bazy danych)
-        allUsers.add(currentUser);
-        allUsers.add(new User("Jan Kowalski", "jan@example.com", "password123", false));
-        allUsers.add(new User("Anna Nowak", "anna@example.com", "password123", false));
-
-        initializeComponents();
+        configureDialog();
         setupLayout();
         refreshTeamList();
     }
 
-    private void initializeComponents() {
-        setTitle("Ustawienia - Zarządzanie Zespołami");
+    private void configureDialog() {
+        setTitle(TITLE);
         setModal(true);
         setSize(800, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
-
-        teamListModel = new DefaultListModel<>();
-        teamList = new JList<>(teamListModel);
-        teamList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        teamList.addListSelectionListener(e -> {
-            if (!e.getValueIsAdjusting()) {
-                selectedTeam = teamList.getSelectedValue();
-                updateTeamDetailsPanel();
-            }
-        });
-
-        teamDetailsPanel = new JPanel(new BorderLayout());
-        teamDetailsPanel.setBorder(BorderFactory.createTitledBorder("Szczegóły zespołu"));
     }
 
     private void setupLayout() {
         setLayout(new BorderLayout());
+        add(createLeftPanel(), BorderLayout.WEST);
+        add(createRightPanel(), BorderLayout.CENTER);
+    }
 
-        // Lewy panel - lista zespołów
+    private JPanel createLeftPanel() {
         JPanel leftPanel = new JPanel(new BorderLayout());
         leftPanel.setBorder(new EmptyBorder(10, 10, 10, 5));
         leftPanel.setPreferredSize(new Dimension(250, 0));
 
-        JLabel teamsLabel = new JLabel("Twoje zespoły:");
-        teamsLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        JLabel teamsLabel = new JLabel(TEAM_LIST_LABEL);
+        teamsLabel.setFont(HEADER_FONT);
         leftPanel.add(teamsLabel, BorderLayout.NORTH);
 
-        JScrollPane teamScrollPane = new JScrollPane(teamList);
-        leftPanel.add(teamScrollPane, BorderLayout.CENTER);
+        teamList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        teamList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                selectedTeam = teamList.getSelectedValue();
+                updateTeamDetails();
+            }
+        });
+        leftPanel.add(new JScrollPane(teamList), BorderLayout.CENTER);
 
-        JButton newTeamButton = new JButton("+ Nowy zespół");
+        JButton newTeamButton = new JButton(NEW_TEAM_BUTTON_TEXT);
         newTeamButton.addActionListener(this::createNewTeam);
         leftPanel.add(newTeamButton, BorderLayout.SOUTH);
 
-        // Prawy panel - szczegóły zespołu
+        return leftPanel;
+    }
+
+    private JPanel createRightPanel() {
         JPanel rightPanel = new JPanel(new BorderLayout());
         rightPanel.setBorder(new EmptyBorder(10, 5, 10, 10));
+        teamDetailsPanel.setBorder(BorderFactory.createTitledBorder("Szczegóły zespołu"));
         rightPanel.add(teamDetailsPanel, BorderLayout.CENTER);
-
-        add(leftPanel, BorderLayout.WEST);
-        add(rightPanel, BorderLayout.CENTER);
+        return rightPanel;
     }
 
     private void createNewTeam(ActionEvent e) {
-        String teamName = JOptionPane.showInputDialog(this, "Nazwa zespołu:", "Nowy zespół", JOptionPane.PLAIN_MESSAGE);
-        if (teamName != null && !teamName.trim().isEmpty()) {
-            String teamDesc = JOptionPane.showInputDialog(this, "Opis zespołu:", "Nowy zespół", JOptionPane.PLAIN_MESSAGE);
-            if (teamDesc == null) teamDesc = "";
+        String teamName = prompt("Nazwa zespołu:", "Nowy zespół");
+        if (teamName == null || teamName.trim().isEmpty()) return;
 
-            Team newTeam = new Team(teamName.trim(), teamDesc.trim(), currentUser);
-            teams.add(newTeam);
-            container.addTeam(newTeam);
-            Main.saveProjects(container); 
-            System.out.println("DEBUG: Wywołano saveProjects z createNewTeam");
-            refreshTeamList();
-        }
+        String teamDesc = prompt("Opis zespołu:", "Nowy zespół");
+        if (teamDesc == null) teamDesc = "";
+
+        Team newTeam = new Team(teamName.trim(), teamDesc.trim(), currentUser);
+        teams.add(newTeam);
+        container.addTeam(newTeam);
+        Main.saveProjects(container);
+        refreshTeamList();
+    }
+
+    private String prompt(String message, String title) {
+        return JOptionPane.showInputDialog(this, message, title, JOptionPane.PLAIN_MESSAGE);
     }
 
     private void refreshTeamList() {
@@ -110,246 +108,196 @@ public class SettingsWindow extends JDialog {
         }
     }
 
-    private void updateTeamDetailsPanel() {
+    private void updateTeamDetails() {
         teamDetailsPanel.removeAll();
-
         if (selectedTeam == null) {
             teamDetailsPanel.add(new JLabel("Wybierz zespół z listy", SwingConstants.CENTER));
         } else {
-            JPanel detailsContent = createTeamDetailsContent();
-            teamDetailsPanel.add(detailsContent, BorderLayout.CENTER);
+            JPanel panel = new TeamDetailsPanel(selectedTeam);
+            teamDetailsPanel.add(panel, BorderLayout.CENTER);
         }
-
         teamDetailsPanel.revalidate();
         teamDetailsPanel.repaint();
     }
 
-    private JPanel createTeamDetailsContent() {
-        JPanel panel = new JPanel(new BorderLayout());
+    private void addManagementButtons(JPanel panel, JList<String> membersList) {
+        if (!canManageTeam()) return;
 
-        // Informacje o zespole
-        JPanel infoPanel = new JPanel(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
-        gbc.anchor = GridBagConstraints.WEST;
+        JPanel buttonPanel = new JPanel(new FlowLayout());
 
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        infoPanel.add(new JLabel("Nazwa:"), gbc);
-        gbc.gridx = 1;
-        JLabel nameLabel = new JLabel(selectedTeam.getName());
-        nameLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        infoPanel.add(nameLabel, gbc);
+        JButton addMemberButton = new JButton("Dodaj członka");
+        addMemberButton.addActionListener(e -> addMember());
+        buttonPanel.add(addMemberButton);
 
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        infoPanel.add(new JLabel("Opis:"), gbc);
-        gbc.gridx = 1;
-        infoPanel.add(new JLabel(selectedTeam.getDescription()), gbc);
+        JButton removeMemberButton = new JButton("Usuń członka");
+        removeMemberButton.addActionListener(e -> removeMember(membersList));
+        buttonPanel.add(removeMemberButton);
 
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        infoPanel.add(new JLabel("Twórca:"), gbc);
-        gbc.gridx = 1;
-        infoPanel.add(new JLabel(selectedTeam.getCreator().name), gbc);
+        JButton changeRoleButton = new JButton("Zmień rolę");
+        changeRoleButton.addActionListener(e -> changeRole(membersList));
+        buttonPanel.add(changeRoleButton);
 
-        panel.add(infoPanel, BorderLayout.NORTH);
-
-        // Lista członków
-        JPanel membersPanel = new JPanel(new BorderLayout());
-        membersPanel.setBorder(BorderFactory.createTitledBorder("Członkowie zespołu"));
-
-        DefaultListModel<String> membersModel = new DefaultListModel<>();
-        for (Map.Entry<User, Role> entry : selectedTeam.getMembersWithRoles().entrySet()) {
-            String memberInfo = entry.getKey().name + " (" + entry.getValue().getName() + ")";
-            membersModel.addElement(memberInfo);
+        if (selectedTeam.isCreator(currentUser)) {
+            JButton deleteButton = new JButton("Usuń zespół");
+            deleteButton.setForeground(Color.RED);
+            deleteButton.addActionListener(e -> deleteTeam());
+            buttonPanel.add(deleteButton);
         }
 
-        JList<String> membersList = new JList<>(membersModel);
-        JScrollPane membersScrollPane = new JScrollPane(membersList);
-        membersScrollPane.setPreferredSize(new Dimension(0, 150));
-        membersPanel.add(membersScrollPane, BorderLayout.CENTER);
-
-        // Przyciski zarządzania członkami
-        if (selectedTeam.isCreator(currentUser) ||
-                selectedTeam.getUserRole(currentUser).getPerm() >= 64) {
-
-            JPanel buttonPanel = new JPanel(new FlowLayout());
-
-            JButton addMemberButton = new JButton("Dodaj członka");
-            addMemberButton.addActionListener(e -> addMemberToTeam());
-            buttonPanel.add(addMemberButton);
-
-            JButton removeMemberButton = new JButton("Usuń członka");
-            removeMemberButton.addActionListener(e -> removeMemberFromTeam(membersList));
-            buttonPanel.add(removeMemberButton);
-
-            JButton changeRoleButton = new JButton("Zmień rolę");
-            changeRoleButton.addActionListener(e -> changeMemberRole(membersList));
-            buttonPanel.add(changeRoleButton);
-
-            if (selectedTeam.isCreator(currentUser)) {
-                JButton deleteTeamButton = new JButton("Usuń zespół");
-                deleteTeamButton.setForeground(Color.RED);
-                deleteTeamButton.addActionListener(e -> {
-                    int confirm = JOptionPane.showConfirmDialog(
-                        this,
-                        "Czy na pewno chcesz usunąć zespół " + selectedTeam.getName() + "?\nSpowoduje to usunięcie go ze wszystkich projektów.",
-                        "Potwierdź usunięcie",
-                        JOptionPane.YES_NO_OPTION
-                    );
-                    
-                    if (confirm == JOptionPane.YES_OPTION) {
-                        for(Project p : container.projects) {
-                            if (selectedTeam.equals(p.getTeam())) {
-                                p.setTeam(null);
-                            }
-                        }
-                        selectedTeam.disbandTeam();
-                        teams.remove(selectedTeam);
-                        refreshTeamList();
-                        selectedTeam = null;
-                        updateTeamDetailsPanel();
-                    }
-                });
-                buttonPanel.add(deleteTeamButton);
-            }
-
-            membersPanel.add(buttonPanel, BorderLayout.SOUTH);
-        }
-
-        panel.add(membersPanel, BorderLayout.CENTER);
-
-        return panel;
+        panel.add(buttonPanel, BorderLayout.SOUTH);
     }
 
-    private void addMemberToTeam() {
-        List<User> availableUsers = new ArrayList<>();
-        for (User user : allUsers) {
-            if (!selectedTeam.isMember(user)) {
-                availableUsers.add(user);
-            }
+    private boolean canManageTeam() {
+        return selectedTeam != null &&
+                (selectedTeam.isCreator(currentUser) ||
+                        selectedTeam.getUserRole(currentUser).getPerm() >= 64);
+    }
+
+    private void addMember() {
+        List<User> candidates = new ArrayList<>();
+        for (User u : allUsers) {
+            if (!selectedTeam.isMember(u)) candidates.add(u);
         }
 
-        if (availableUsers.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Wszyscy użytkownicy są już członkami tego zespołu.");
+        if (candidates.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Wszyscy użytkownicy należą już do zespołu.");
             return;
         }
 
-        User selectedUser = (User) JOptionPane.showInputDialog(
-                this,
-                "Wybierz użytkownika do dodania:",
-                "Dodaj członka",
-                JOptionPane.PLAIN_MESSAGE,
-                null,
-                availableUsers.toArray(),
-                availableUsers.get(0)
+        User selected = (User) JOptionPane.showInputDialog(
+                this, "Wybierz użytkownika:", "Dodaj członka",
+                JOptionPane.PLAIN_MESSAGE, null, candidates.toArray(), candidates.get(0)
         );
 
-        if (selectedUser != null) {
+        if (selected != null) {
             Role[] roles = {Role.createViewer(), Role.createMember(), Role.createAdministrator()};
-            Role selectedRole = (Role) JOptionPane.showInputDialog(
-                    this,
-                    "Wybierz rolę dla użytkownika:",
-                    "Wybierz rolę",
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    roles,
-                    roles[1]
+            Role role = (Role) JOptionPane.showInputDialog(
+                    this, "Rola nowego członka:", "Rola",
+                    JOptionPane.PLAIN_MESSAGE, null, roles, roles[1]
             );
 
-            if (selectedRole != null) {
-                selectedTeam.addMember(selectedUser, selectedRole);
-                selectedUser.addTeam(selectedTeam, selectedRole);
+            if (role != null) {
+                selectedTeam.addMember(selected, role);
+                selected.addTeam(selectedTeam, role);
                 Main.saveProjects(container);
-                updateTeamDetailsPanel();
+                updateTeamDetails();
             }
         }
     }
 
-    private User findUserByNameInSelectedTeam(String name) {
-        for (User user : selectedTeam.getMembers()) {
-            if (user.name.equals(name)) {
-                return user;
-            }
-        }
-        return null;
-    }
-
-    private void removeMemberFromTeam(JList<String> membersList) {
-        String selectedValue = membersList.getSelectedValue();
-        if (selectedValue != null) {
-            String username = selectedValue.substring(0, selectedValue.lastIndexOf(" ("));
-            User userToRemove = findUserByNameInSelectedTeam(username);
-            
-            if (userToRemove == null) {
-                JOptionPane.showMessageDialog(this, "Nie znaleziono użytkownika.");
-                return;
-            }
-
-            if (selectedTeam.isCreator(userToRemove)) {
-                JOptionPane.showMessageDialog(this, "Nie można usunąć twórcy zespołu.");
-                return;
-            }
-
-            int confirm = JOptionPane.showConfirmDialog(
-                    this,
-                    "Czy na pewno chcesz usunąć użytkownika " + userToRemove.name + " z zespołu?",
-                    "Potwierdź usunięcie",
-                    JOptionPane.YES_NO_OPTION
-            );
-
-                if (confirm == JOptionPane.YES_OPTION) {
-                    selectedTeam.removeMember(userToRemove);
-                    userToRemove.removeTeam(selectedTeam);
-                    updateTeamDetailsPanel();
-                }
-            }
-        } else {
+    private void removeMember(JList<String> membersList) {
+        String entry = membersList.getSelectedValue();
+        if (entry == null) {
             JOptionPane.showMessageDialog(this, "Wybierz członka do usunięcia.");
+            return;
+        }
+
+        String name = entry.split(" \\(")[0];
+        User user = findUserByName(name);
+        if (user == null) return;
+
+        if (selectedTeam.isCreator(user)) {
+            JOptionPane.showMessageDialog(this, "Nie można usunąć twórcy zespołu.");
+            return;
+        }
+
+        int confirm = JOptionPane.showConfirmDialog(
+                this, "Usunąć użytkownika " + name + " z zespołu?",
+                "Potwierdzenie", JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            selectedTeam.removeMember(user);
+            user.removeTeam(selectedTeam);
+            Main.saveProjects(container);
+            updateTeamDetails();
         }
     }
 
-    private void changeMemberRole(JList<String> membersList) {
-        String selectedValue = membersList.getSelectedValue();
-        if (selectedValue != null) {
-            String username = selectedValue.substring(0, selectedValue.lastIndexOf(" ("));
-            User userToUpdate = findUserByNameInSelectedTeam(username);
+    private void changeRole(JList<String> membersList) {
+        String entry = membersList.getSelectedValue();
+        if (entry == null) {
+            JOptionPane.showMessageDialog(this, "Wybierz członka do zmiany roli.");
+            return;
+        }
 
-            if (userToUpdate == null) {
-                JOptionPane.showMessageDialog(this, "Nie znaleziono użytkownika.");
-                return;
-            }
+        String name = entry.split(" \\(")[0];
+        User user = findUserByName(name);
+        if (user == null) return;
 
-            if (selectedTeam.isCreator(userToUpdate)) {
-                JOptionPane.showMessageDialog(this, "Nie można zmieniać roli twórcy zespołu.");
-                return;
-            }
+        if (selectedTeam.isCreator(user)) {
+            JOptionPane.showMessageDialog(this, "Nie można zmienić roli twórcy zespołu.");
+            return;
+        }
 
-            Role[] roles = {Role.createViewer(), Role.createMember(), Role.createAdministrator()};
-            Role currentRole = selectedTeam.getUserRole(userToUpdate);
-            Role newRole = (Role) JOptionPane.showInputDialog(
-                    this,
-                    "Wybierz nową rolę dla " + userToUpdate.name + ":",
-                    "Zmień rolę",
-                    JOptionPane.PLAIN_MESSAGE,
-                    null,
-                    roles,
-                    currentRole
-            );
+        Role current = selectedTeam.getUserRole(user);
+        Role[] roles = {Role.createViewer(), Role.createMember(), Role.createAdministrator()};
+        Role newRole = (Role) JOptionPane.showInputDialog(
+                this, "Nowa rola dla " + name + ":", "Zmień rolę",
+                JOptionPane.PLAIN_MESSAGE, null, roles, current
+        );
 
-                if (newRole != null && !newRole.equals(currentRole)) {
-                    selectedTeam.updateMemberRole(userToUpdate, newRole);
-                    userToUpdate.addTeam(selectedTeam, newRole);
-                    updateTeamDetailsPanel();
+        if (newRole != null && !newRole.equals(current)) {
+            selectedTeam.updateMemberRole(user, newRole);
+            user.addTeam(selectedTeam, newRole);
+            Main.saveProjects(container);
+            updateTeamDetails();
+        }
+    }
+
+    private void deleteTeam() {
+        int confirm = JOptionPane.showConfirmDialog(
+                this,
+                "Czy na pewno chcesz usunąć zespół " + selectedTeam.getName() + "?",
+                "Potwierdź usunięcie",
+                JOptionPane.YES_NO_OPTION
+        );
+
+        if (confirm == JOptionPane.YES_OPTION) {
+            for (Project p : container.getProjects()) {
+                if (selectedTeam.equals(p.getTeam())) {
+                    p.setTeam(null);
                 }
             }
-        } else {
-            JOptionPane.showMessageDialog(this, "Wybierz członka do zmiany roli.");
+            selectedTeam.disbandTeam();
+            container.removeTeam(selectedTeam);
+            Main.saveProjects(container);
+            selectedTeam = null;
+            refreshTeamList();
+            updateTeamDetails();
         }
     }
 
-    public List<Team> getTeams() {
-        return teams;
+    private User findUserByName(String name) {
+        return allUsers.stream().filter(u -> u.getName().equals(name)).findFirst().orElse(null);
+    }
+
+    private class TeamDetailsPanel extends JPanel {
+        public TeamDetailsPanel(Team team) {
+            setLayout(new BorderLayout());
+            setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+            JPanel top = new JPanel(new GridLayout(3, 1));
+            top.add(new JLabel("Nazwa: " + team.getName()));
+            top.add(new JLabel("Opis: " + team.getDescription()));
+            top.add(new JLabel("Twórca: " + team.getCreator().getName()));
+            add(top, BorderLayout.NORTH);
+
+            DefaultListModel<String> model = new DefaultListModel<>();
+            for (Map.Entry<User, Role> entry : team.getMembersWithRoles().entrySet()) {
+                model.addElement(entry.getKey().getName() + " (" + entry.getValue().getName() + ")");
+            }
+
+            JList<String> list = new JList<>(model);
+            JScrollPane scroll = new JScrollPane(list);
+            scroll.setPreferredSize(new Dimension(0, 150));
+
+            JPanel members = new JPanel(new BorderLayout());
+            members.setBorder(BorderFactory.createTitledBorder("Członkowie"));
+            members.add(scroll, BorderLayout.CENTER);
+
+            addManagementButtons(members, list);
+            add(members, BorderLayout.CENTER);
+        }
     }
 }

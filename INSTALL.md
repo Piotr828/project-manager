@@ -1,80 +1,91 @@
-Project Manager – Installation Instructions
-===========================================
+# Project Manager – Installation Instructions
 
-Requirements:
--------------
-- Linux system (any modern distribution)
-- The `ProjectManager` file must have executable permissions
+**Version:** 1.0.0
 
-Installation:
--------------
-1. Download and extract the archive:
+## Requirements
 
+- Linux or macOS system (any modern distribution)  
+- Graphical environment (X11 or Wayland)  
+- Executable permission for the `ProjectManager` file
+
+## Installation
+
+1. **Download and extract the archive**  
+   ```bash
    tar -xzf project-manager-1.0.0.tar.gz
+   ```
 
-2. (Optional but recommended) Verify the SHA256 checksum:
-
-   echo "5468fc0117d6f04d3e5ff835e7f5712b5cbfaa8dee428b83eb82eaa15e60a39b  project-manager-1.0.0.tar.gz" | sha256sum -c -
-
-   The output should be:
-
+2. **(Optional but recommended) Verify the SHA256 checksum**  
+   ```bash
+   sha256sum -c project-manager-1.0.0.tar.gz.sha256
+   ```
+   Expected output:  
    `project-manager-1.0.0.tar.gz: OK`
 
-3. Change to the extracted directory:
-
+3. **Navigate to the extracted directory**  
+   ```bash
    cd project-manager-1.0.0
+   ```
 
-4. Make the application executable (if needed):
-
+4. **Make the application executable (if needed)**  
+   ```bash
    chmod +x ProjectManager
+   ```
 
-5. Run the application:
-
+5. **Run the application**  
+   ```bash
    ./ProjectManager
+   ```
 
-Notes:
-------
-- If you get a "Permission denied" error, check file permissions.
-- Requires a graphical environment (X11 or Wayland).
+## Notes
 
+- If you encounter a "Permission denied" error, check file permissions.  
+- The icon was generated using AI.  
+- Application authors: **Piotr Wdowiak, Laura Olszewska, Hanna Waronska**
 
-------------------------------------------------------------
+---
 
-Project Manager – Instrukcja instalacji
-=======================================
+# Project Manager – Instrukcja instalacji
 
-Wymagania:
-----------
-- System Linux (dowolna nowoczesna dystrybucja)
-- Plik `ProjectManager` musi mieć nadane uprawnienia wykonywalne
+**Wersja:** 1.0.0
 
-Instalacja:
------------
-1. Pobierz i rozpakuj archiwum:
+## Wymagania
 
+- System Linux lub macOS (dowolna nowoczesna dystrybucja)  
+- Środowisko graficzne (X11 lub Wayland)  
+- Plik `ProjectManager` musi mieć ustawione uprawnienia wykonywalne
+
+## Instalacja
+
+1. **Pobierz i rozpakuj archiwum**  
+   ```bash
    tar -xzf project-manager-1.0.0.tar.gz
+   ```
 
-2. (Opcjonalnie, ale zalecane) Sprawdź sumę kontrolną SHA256:
-
-   echo "5468fc0117d6f04d3e5ff835e7f5712b5cbfaa8dee428b83eb82eaa15e60a39b  project-manager-1.0.0.tar.gz" | sha256sum -c -
-
-   Powinien pojawić się komunikat:
-
+2. **(Opcjonalnie, ale zalecane) Sprawdź sumę kontrolną SHA256**  
+   ```bash
+   sha256sum -c project-manager-1.0.0.tar.gz.sha256
+   ```
+   Oczekiwany wynik:  
    `project-manager-1.0.0.tar.gz: OK`
 
-3. Przejdź do wypakowanego katalogu:
-
+3. **Przejdź do wypakowanego katalogu**  
+   ```bash
    cd project-manager-1.0.0
+   ```
 
-4. Nadaj aplikacji uprawnienia do uruchamiania (jeśli to konieczne):
-
+4. **Nadaj aplikacji uprawnienia do uruchamiania (jeśli to konieczne)**  
+   ```bash
    chmod +x ProjectManager
+   ```
 
-5. Uruchom aplikację:
-
+5. **Uruchom aplikację**  
+   ```bash
    ./ProjectManager
+   ```
 
-Uwagi:
-------
-- Jeśli pojawi się błąd „Permission denied”, sprawdź uprawnienia pliku.
-- Wymagane jest środowisko graficzne (X11 lub Wayland).
+## Uwagi
+
+- Jeśli pojawi się błąd „Permission denied”, sprawdź uprawnienia pliku.  
+- Ikona została wygenerowana przez sztuczną inteligencję.  
+- Autorzy aplikacji: **Piotr Wdowiak, Laura Olszewska, Hanna Waronska**

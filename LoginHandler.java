@@ -1,4 +1,4 @@
-import javax.swing.JOptionPane;
+import javax.swing.*;
 
 public class LoginHandler {
 
@@ -26,7 +26,7 @@ public class LoginHandler {
 
         if (success) {
             mainFrame.showDashboard();
-            mainFrame.updateLoginStatus(); // To update menu etc.
+            mainFrame.updateLoginStatus();
         } else {
             JOptionPane.showMessageDialog(mainFrame, "Invalid email or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
         }
