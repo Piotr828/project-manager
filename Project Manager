@@ -6,6 +6,14 @@ MAIN_CLASS="Main"
 # Ścieżka do znacznika kompilacji
 COMPILED_FLAG=".compiled"
 
+# Nazwa pliku .desktop
+DESKTOP_FILE_NAME="project-manager.desktop"
+DESKTOP_PATH="$HOME/.local/share/applications/$DESKTOP_FILE_NAME"
+
+# Absolutna ścieżka do katalogu projektu
+PROJECT_DIR="$(pwd)"
+ICON_PATH="$PROJECT_DIR/Icon.png"
+
 # Kompilacja, jeśli brak znacznika
 if [ ! -f "$COMPILED_FLAG" ]; then
     echo "Kompilacja projektu..."
@@ -20,7 +28,29 @@ else
     echo "Projekt już skompilowany – pomijam kompilację."
 fi
 
+# Tworzenie pliku .desktop, jeśli go nie ma
+if [ ! -f "$DESKTOP_PATH" ]; then
+    echo "Tworzenie pliku .desktop..."
+    mkdir -p "$HOME/.local/share/applications"
+
+    cat > "$DESKTOP_PATH" <<EOF
+[Desktop Entry]
+Type=Application
+Name=Project Manager
+Comment=Zarządzanie projektami
+Exec=java -cp "$PROJECT_DIR" $MAIN_CLASS
+Icon=$ICON_PATH
+Terminal=false
+Categories=Utility;
+EOF
+
+    chmod +x "$DESKTOP_PATH"
+    echo "Plik .desktop utworzony: $DESKTOP_PATH"
+else
+    echo "Plik .desktop już istnieje – pomijam tworzenie."
+fi
+
 # Uruchomienie aplikacji
 echo "Uruchamianie..."
-java "$MAIN_CLASS"
+java -cp "$PROJECT_DIR" "$MAIN_CLASS"
 
