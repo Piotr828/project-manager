@@ -132,14 +132,17 @@ public class DashboardView extends JPanel {
         repaint();
     }
 
-    private void resizeProjectCards() {
-        int width = projectsPanel.getWidth() - 30;
-        for (Component comp : projectsPanel.getComponents()) {
-            if (comp instanceof ProjectCard card) {
-                card.setMaximumSize(new Dimension(width, 220));
-            }
+private void resizeProjectCards() {
+    int width = projectsPanel.getWidth() - 30;
+    for (Component comp : projectsPanel.getComponents()) {
+        if (comp instanceof ProjectCard card) {
+            card.setPreferredSize(new Dimension(width, 220));
         }
     }
+    projectsPanel.revalidate();
+    projectsPanel.repaint();
+}
+
 
     private void addProjectsResizeListener() {
         ComponentAdapter listener = new ComponentAdapter() {

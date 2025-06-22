@@ -18,7 +18,7 @@ public class LoginHandler {
 
     public void handleLogin(String email, String password) {
         if (email.trim().isEmpty() || password.trim().isEmpty()) {
-            JOptionPane.showMessageDialog(mainFrame, "Email and password cannot be empty.", "Login Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Proszę podać email i hasło.", "Login Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
 
@@ -28,7 +28,7 @@ public class LoginHandler {
             mainFrame.showDashboard();
             mainFrame.updateLoginStatus();
         } else {
-            JOptionPane.showMessageDialog(mainFrame, "Invalid email or password.", "Login Failed", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(mainFrame, "Błędny email lub hasło.", "Login Failed", JOptionPane.ERROR_MESSAGE);
         }
     }
 }

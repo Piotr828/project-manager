@@ -20,6 +20,7 @@ public class MainFrame extends JFrame {
         setIconImage(new ImageIcon("Icon.png").getImage());
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         setSize(1000, 700);
+        setMinimumSize(new Dimension(800, 600));
         setLocationRelativeTo(null);
 
         setupMenuBar();
